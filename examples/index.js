@@ -1,4 +1,6 @@
 import {Action} from '../src/';
+import React from 'react';
+import ReactDOM from 'react-dom';
 
 const code = `
 const logger = function (store) {
@@ -31,7 +33,27 @@ const store = new Store({
 });
 `;
 
+class App extends React.Component {
+    action = new Action(code)
+    state = {
+        code
+    }
+    edit = (type, oldName, newName) => {
+        const code = this.action[type](oldName, newName);
+        this.setState({
+            code
+        });
+    }
+    render() {
+        return (<div>
+            <button onClick={() => this.edit('add', 'test')}>Add test action</button>
+            <button onClick={() => this.edit('rename', 'reduce', 'plus')}>Rename reduce action</button>
+            <button onClick={() => this.edit('remove', 'add')}>Remove add action</button>
+            <pre>{this.state.code}</pre>
+        </div>);
+    }
+}
 
-window.action = new Action(code);
+ReactDOM.render(<App/>, document.querySelector('#container'));
 
 

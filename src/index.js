@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define*/
 import * as babylon from 'babylon';
 import traverse from 'babel-traverse';
 
