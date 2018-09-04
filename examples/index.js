@@ -92,6 +92,8 @@ class CodeApp extends React.Component {
             <button onClick={() => this.edit('attrs', 'Table', 'rowSelection', "{a: 'b'}")}>Attrs object Table</button>
             <button onClick={() => this.edit('attrs', 'Table', 'rowSelection', "<div></div>")}>Attrs element Table</button>
             <button onClick={() => this.edit('rename', 'div', 'span')}>Rename div to span</button>
+            <button onClick={() => this.edit('add', 'div', '<span>123</span>')}>Add span to div</button>
+            <button onClick={() => this.edit('remove', 'Table.Column')}>Remove Table.Column</button>
             <pre>{this.state.code}</pre>
         </div>);
     }

@@ -1,6 +1,7 @@
 /* eslint-disable no-use-before-define*/
 import traverse from 'babel-traverse';
 import generate from 'babel-generator';
+import t from 'babel-types';
 import { parse, parseExpression } from './util';
 
 export default class Element {
@@ -50,6 +51,19 @@ export default class Element {
         this.code = generate(this.ast).code;
         return this.code;
     }
+    removeAttr(node, name) {
+        if (typeof node === 'string') {
+            node = this.find(node)[0];
+        }
+        if (node) {
+            const index = this.indexAttr(node, name);
+            if (index > -1) {
+                node.openingElement.attributes.splice(index, 1);
+            }
+        }
+        this.code = generate(this.ast).code;
+        return this.code;
+    }
     indexAttr(node, name) {
         const {openingElement} = node;
         const {attributes} = openingElement;
@@ -59,8 +73,27 @@ export default class Element {
     hasAttr(node, name) {
         return this.indexAttr(node, name) > -1;
     }
-    remove(name) {}
-    add(node, name, props, children) {}
+    remove(name) {
+        const path = this.find(name, true)[0];
+        if (path) {
+            path.replaceWith(t.stringLiteral(''));
+        } else {
+            console.warn(`Cant find ${name} 节点`);
+        }
+        this.code = generate(this.ast).code;
+        return this.code;
+    }
+    add(node, child) {
+        if (typeof node === 'string') {
+            node = this.find(node)[0];
+        }
+        if (node) {
+            const ast = parseExpression(child);
+            node.children.push(ast);
+        }
+        this.code = generate(this.ast).code;
+        return this.code;
+    }
     /**
      * 重命名一个节点，如果寻找到多个节点，只会重命名第一个
      * @param {String}} oldName
@@ -84,7 +117,7 @@ export default class Element {
      * @param {String}} name
      * @return {Array}
      */
-    find(name) {
+    find(name, isPath) {
         this.ast = parse(this.code);
         const ret = [];
         traverse(this.ast, {
@@ -92,7 +125,7 @@ export default class Element {
                 const { node } = path;
                 const { name: nodeName } = node.name;
                 if (nodeName === name) {
-                    ret.push(path.parent);
+                    ret.push(isPath ? path.parentPath : path.parent);
                 }
             }
         });
