@@ -1,4 +1,5 @@
 import * as babylon from 'babylon';
+const CACHE = {};
 const config = {
     sourceType: 'module',
     plugins: [
@@ -16,7 +17,11 @@ const config = {
     ]
 };
 export const parse = function parse(code) {
+    if (CACHE[code]) {
+        return CACHE[code];
+    }
     const ast = babylon.parse(code, config);
+    CACHE[code] = ast;
     return ast;
 };
 
