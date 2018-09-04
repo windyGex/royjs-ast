@@ -1,4 +1,4 @@
-import {Action} from '../src/';
+import {Action, Element} from '../src/';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -54,6 +54,40 @@ class App extends React.Component {
     }
 }
 
-ReactDOM.render(<App/>, document.querySelector('#container'));
+const nodeCode = `
+class App extends React.Component {
+
+	render() {
+    	return (<div className="test">
+          	<Table>
+          		<Table.Column title></Table.Column>
+          	</Table>
+          </div>);
+    }
+}
+`;
+
+class CodeApp extends React.Component {
+    action = new Element(code)
+    state = {
+        code
+    }
+    edit = (type, oldName, newName) => {
+        const code = this.action[type](oldName, newName);
+        this.setState({
+            code
+        });
+    }
+    render() {
+        return (<div>
+            <button onClick={() => this.edit('add', 'test')}>Add test action</button>
+            <button onClick={() => this.edit('rename', 'reduce', 'plus')}>Rename reduce action</button>
+            <button onClick={() => this.edit('remove', 'add')}>Remove add action</button>
+            <pre>{this.state.code}</pre>
+        </div>);
+    }
+}
+
+ReactDOM.render(<div><App/><CodeApp/></div>, document.querySelector('#container'));
 
 
