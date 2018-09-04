@@ -60,7 +60,8 @@ class App extends React.Component {
 	render() {
     	return (<div className="test">
           	<Table>
-          		<Table.Column title></Table.Column>
+                  <Table.Column title></Table.Column>
+                  <Table.Column data-roy-id="uuid"></Table.Column>
           	</Table>
           </div>);
     }
@@ -68,26 +69,34 @@ class App extends React.Component {
 `;
 
 class CodeApp extends React.Component {
-    action = new Element(code)
+    action = new Element(nodeCode)
     state = {
-        code
+        code: nodeCode
     }
-    edit = (type, oldName, newName) => {
-        const code = this.action[type](oldName, newName);
-        this.setState({
-            code
-        });
+    edit = (type, oldName, newName, other) => {
+        const code = this.action[type](oldName, newName, other);
+        if (typeof code === 'string') {
+            this.setState({
+                code
+            });
+        } else {
+            console.log(code);
+        }
     }
     render() {
         return (<div>
-            <button onClick={() => this.edit('add', 'test')}>Add test action</button>
-            <button onClick={() => this.edit('rename', 'reduce', 'plus')}>Rename reduce action</button>
-            <button onClick={() => this.edit('remove', 'add')}>Remove add action</button>
+            <button onClick={() => this.edit('find', 'Table')}>findNode Table</button>
+            <button onClick={() => this.edit('findById', 'uuid')}>findNode By data-roy-id</button>
+            <button onClick={() => this.edit('attrs', 'Table', 'loading', 2)}>Attrs number Table</button>
+            <button onClick={() => this.edit('attrs', 'Table', 'type', true)}>Attrs bool Table</button>
+            <button onClick={() => this.edit('attrs', 'Table', 'rowSelection', "{a: 'b'}")}>Attrs object Table</button>
+            <button onClick={() => this.edit('attrs', 'Table', 'rowSelection', "<div></div>")}>Attrs element Table</button>
+            <button onClick={() => this.edit('rename', 'div', 'span')}>Rename div to span</button>
             <pre>{this.state.code}</pre>
         </div>);
     }
 }
 
-ReactDOM.render(<div><App/><CodeApp/></div>, document.querySelector('#container'));
+ReactDOM.render(<div><CodeApp/><App/></div>, document.querySelector('#container'));
 
 

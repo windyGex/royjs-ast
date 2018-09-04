@@ -1,23 +1,27 @@
 import * as babylon from 'babylon';
-
+const config = {
+    sourceType: 'module',
+    plugins: [
+        'jsx',
+        'flow',
+        'doExpressions',
+        'objectRestSpread',
+        'decorators',
+        'classProperties',
+        'exportExtensions',
+        'asyncGenerators',
+        'functionBind',
+        'functionSent',
+        'dynamicImport'
+    ]
+};
 export const parse = function parse(code) {
-    const ast = babylon.parse(code, {
-        sourceType: 'module',
-        plugins: [
-            'jsx',
-            'flow',
-            'doExpressions',
-            'objectRestSpread',
-            'decorators',
-            'classProperties',
-            'exportExtensions',
-            'asyncGenerators',
-            'functionBind',
-            'functionSent',
-            'dynamicImport'
-        ]
-    });
+    const ast = babylon.parse(code, config);
     return ast;
+};
+
+export const parseExpression = function parseExpression(code) {
+    return babylon.parseExpression(code, config);
 };
 
 export const updateCode = function updateCode(code, changes) {
