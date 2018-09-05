@@ -38416,7 +38416,7 @@ var _util = require('./util');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } /* eslint-disable no-use-before-define*/
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } /* eslint-disable no-use-before-define, consistent-return*/
 
 
 var Action = function () {
@@ -38505,7 +38505,7 @@ var Action = function () {
                         var node = path.node;
 
                         if (assertName(path, lastAction)) {
-                            var hasComma = _this.code.charAt(node.end + 1) == ',';
+                            var hasComma = _this.code.charAt(node.end + 1) === ',';
                             changes.push({
                                 start: node.end,
                                 end: node.end,
@@ -68573,14 +68573,25 @@ var _babelGenerator2 = _interopRequireDefault(_babelGenerator);
 
 var _babelTypes = require('babel-types');
 
-var _babelTypes2 = _interopRequireDefault(_babelTypes);
+var t = _interopRequireWildcard(_babelTypes);
 
 var _util = require('./util');
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } /* eslint-disable no-use-before-define*/
 
+
+var getNodeName = function getNodeName(openingElement) {
+    var name = openingElement.name;
+    if (name.type === 'JSXMemberExpression') {
+        name = name.object.name + '.' + name.property.name;
+        return name;
+    }
+    return name.name;
+};
 
 var Element = function () {
     function Element(code) {
@@ -68593,16 +68604,61 @@ var Element = function () {
         key: 'parse',
         value: function parse() {
             this.ast = (0, _util.parse)(this.code);
-            var ret = [];
-            (0, _babelTraverse2.default)(this.ast, {
-                JSXOpeningElement: function JSXOpeningElement(path) {
-                    var node = path.node;
+            var ret = {
+                elements: [],
+                class: []
+            };
+            var cache = {};
+            var loopNode = function loopNode(node) {
+                var ret = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 
-                    if (node.key.name === 'actions' && node.value.type === 'ObjectExpression') {
-                        node.value.properties.forEach(function (prop) {
-                            ret.push(prop.key.name);
+                cache[node.start] = true;
+                if (node.type === 'JSXElement') {
+                    var openingElement = node.openingElement;
+                    var obj = {
+                        name: getNodeName(openingElement),
+                        start: node.start,
+                        end: node.end,
+                        children: []
+                    };
+                    if (node.children) {
+                        node.children.forEach(function (node) {
+                            loopNode(node, obj.children);
                         });
                     }
+                    ret.push(obj);
+                }
+                return ret;
+            };
+
+            (0, _babelTraverse2.default)(this.ast, {
+                JSXElement: function JSXElement(path) {
+                    var node = path.node;
+
+                    if (cache[node.start]) {
+                        return;
+                    }
+                    loopNode(node, ret.elements);
+                },
+                ClassDeclaration: function ClassDeclaration(path) {
+                    var node = path.node;
+
+                    if (cache[node.start]) {
+                        return;
+                    }
+                    var className = node.id.name;
+                    var obj = {
+                        name: className,
+                        methods: []
+                    };
+                    node.body.body.forEach(function (method) {
+                        obj.methods.push({
+                            name: method.key.name,
+                            start: method.start,
+                            end: method.end
+                        });
+                    });
+                    ret.class.push(obj);
                 }
             });
             return ret;
@@ -68673,7 +68729,7 @@ var Element = function () {
         value: function remove(name) {
             var path = this.find(name, true)[0];
             if (path) {
-                path.replaceWith(_babelTypes2.default.stringLiteral(''));
+                path.replaceWith(t.identifier(''));
             } else {
                 console.warn('Cant find ' + name + ' \u8282\u70B9');
             }
@@ -68728,8 +68784,8 @@ var Element = function () {
             (0, _babelTraverse2.default)(this.ast, {
                 JSXOpeningElement: function JSXOpeningElement(path) {
                     var node = path.node;
-                    var nodeName = node.name.name;
 
+                    var nodeName = getNodeName(node);
                     if (nodeName === name) {
                         ret.push(isPath ? path.parentPath : path.parent);
                     }
@@ -90974,7 +91030,7 @@ var App = function (_React$Component) {
     return App;
 }(_react2.default.Component);
 
-var nodeCode = '\nclass App extends React.Component {\n\n\trender() {\n    \treturn (<div className="test">\n          \t<Table>\n                  <Table.Column title></Table.Column>\n                  <Table.Column data-roy-id="uuid"></Table.Column>\n          \t</Table>\n          </div>);\n    }\n}\n';
+var nodeCode = '\nconst e = <div></div>;\nclass App extends React.Component {\n\n\trender() {\n    \treturn (<div className="test">\n          \t<Table>\n                  <Table.Column title></Table.Column>\n                  <Table.Column data-roy-id="uuid"></Table.Column>\n          \t</Table>\n          </div>);\n    }\n}\n';
 
 var CodeApp = function (_React$Component2) {
     _inherits(CodeApp, _React$Component2);
@@ -91012,6 +91068,13 @@ var CodeApp = function (_React$Component2) {
             return _react2.default.createElement(
                 'div',
                 null,
+                _react2.default.createElement(
+                    'button',
+                    { onClick: function onClick() {
+                            return _this4.edit('parse');
+                        } },
+                    'findAllNode'
+                ),
                 _react2.default.createElement(
                     'button',
                     { onClick: function onClick() {
@@ -91122,7 +91185,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '60787' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '64558' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 

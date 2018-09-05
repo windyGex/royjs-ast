@@ -9,7 +9,7 @@
     "dev": "webpack --progress --colors --watch --env dev",
     "test": "mocha --require babel-core/register --colors ./test/*.spec.js",
     "test:watch": "mocha --require babel-core/register --colors -w ./test/*.spec.js",
-    "prepublish": "npm run build && npm run build:umd",
+    "prepublish": "npm run build",
     "example": "parcel examples/index.html"
   },
   "repository": {
@@ -80,6 +80,7 @@
     "babel-generator": "^6.26.1",
     "babel-template": "^6.26.0",
     "babel-traverse": "^6.26.0",
+    "babel-types": "^6.26.0",
     "babylon": "^6.18.0"
   },
   "directories": {

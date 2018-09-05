@@ -55,6 +55,7 @@ class App extends React.Component {
 }
 
 const nodeCode = `
+const e = <div></div>;
 class App extends React.Component {
 
 	render() {
@@ -85,6 +86,7 @@ class CodeApp extends React.Component {
     }
     render() {
         return (<div>
+            <button onClick={() => this.edit('parse')}>findAllNode</button>
             <button onClick={() => this.edit('find', 'Table')}>findNode Table</button>
             <button onClick={() => this.edit('findById', 'uuid')}>findNode By data-roy-id</button>
             <button onClick={() => this.edit('attrs', 'Table', 'loading', 2)}>Attrs number Table</button>

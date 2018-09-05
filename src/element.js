@@ -1,8 +1,17 @@
 /* eslint-disable no-use-before-define*/
 import traverse from 'babel-traverse';
 import generate from 'babel-generator';
-import t from 'babel-types';
+import * as t from 'babel-types';
 import { parse, parseExpression } from './util';
+
+const getNodeName = function getNodeName(openingElement) {
+    let name = openingElement.name;
+    if (name.type === 'JSXMemberExpression') {
+        name = name.object.name + '.' + name.property.name;
+        return name;
+    }
+    return name.name;
+};
 
 export default class Element {
     constructor(code) {
@@ -10,18 +19,57 @@ export default class Element {
     }
     parse() {
         this.ast = parse(this.code);
-        const ret = [];
-        traverse(this.ast, {
-            JSXOpeningElement(path) {
-                const { node } = path;
-                if (
-                    node.key.name === 'actions' &&
-                    node.value.type === 'ObjectExpression'
-                ) {
-                    node.value.properties.forEach(prop => {
-                        ret.push(prop.key.name);
+        const ret = {
+            elements: [],
+            class: []
+        };
+        const cache = {};
+        const loopNode = function loopNode(node, ret = []) {
+            cache[node.start] = true;
+            if (node.type === 'JSXElement') {
+                const openingElement = node.openingElement;
+                const obj = {
+                    name: getNodeName(openingElement),
+                    start: node.start,
+                    end: node.end,
+                    children: []
+                };
+                if (node.children) {
+                    node.children.forEach(node => {
+                        loopNode(node, obj.children);
                     });
                 }
+                ret.push(obj);
+            }
+            return ret;
+        };
+
+        traverse(this.ast, {
+            JSXElement(path) {
+                const { node } = path;
+                if (cache[node.start]) {
+                    return;
+                }
+                loopNode(node, ret.elements);
+            },
+            ClassDeclaration(path) {
+                const { node } = path;
+                if (cache[node.start]) {
+                    return;
+                }
+                const className = node.id.name;
+                const obj = {
+                    name: className,
+                    methods: []
+                };
+                node.body.body.forEach(method => {
+                    obj.methods.push({
+                        name: method.key.name,
+                        start: method.start,
+                        end: method.end
+                    });
+                });
+                ret.class.push(obj);
             }
         });
         return ret;
@@ -65,8 +113,8 @@ export default class Element {
         return this.code;
     }
     indexAttr(node, name) {
-        const {openingElement} = node;
-        const {attributes} = openingElement;
+        const { openingElement } = node;
+        const { attributes } = openingElement;
         const attrList = attributes.map(attr => attr.name.name);
         return attrList.indexOf(name);
     }
@@ -76,7 +124,7 @@ export default class Element {
     remove(name) {
         const path = this.find(name, true)[0];
         if (path) {
-            path.replaceWith(t.stringLiteral(''));
+            path.replaceWith(t.identifier(''));
         } else {
             console.warn(`Cant find ${name} 节点`);
         }
@@ -123,7 +171,7 @@ export default class Element {
         traverse(this.ast, {
             JSXOpeningElement(path) {
                 const { node } = path;
-                const { name: nodeName } = node.name;
+                const nodeName = getNodeName(node);
                 if (nodeName === name) {
                     ret.push(isPath ? path.parentPath : path.parent);
                 }
@@ -139,9 +187,9 @@ export default class Element {
         this.ast = parse(this.code);
         let activeNode;
         traverse(this.ast, {
-            JSXOpeningElement: (path) => {
-                const {node} = path;
-                const {attributes} = node;
+            JSXOpeningElement: path => {
+                const { node } = path;
+                const { attributes } = node;
                 const index = this.indexAttr(path.parent, 'data-roy-id');
                 if (index > -1) {
                     const value = attributes[index].value.value;

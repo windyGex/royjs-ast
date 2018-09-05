@@ -1,4 +1,4 @@
-/* eslint-disable no-use-before-define*/
+/* eslint-disable no-use-before-define, consistent-return*/
 import traverse from 'babel-traverse';
 import {parse, updateCode} from './util';
 
@@ -78,7 +78,7 @@ export default class Action {
                 ObjectMethod: (path) => {
                     const {node} = path;
                     if (assertName(path, lastAction)) {
-                        const hasComma = this.code.charAt(node.end + 1) == ',';
+                        const hasComma = this.code.charAt(node.end + 1) === ',';
                         changes.push({
                             start: node.end,
                             end: node.end,
