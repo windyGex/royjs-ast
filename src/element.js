@@ -165,7 +165,7 @@ export default class Element {
      * @param {String}} name
      * @return {Array}
      */
-    find(name, isPath) {
+    find(name, isPath, start) {
         this.ast = parse(this.code);
         const ret = [];
         traverse(this.ast, {
@@ -173,7 +173,9 @@ export default class Element {
                 const { node } = path;
                 const nodeName = getNodeName(node);
                 if (nodeName === name) {
-                    ret.push(isPath ? path.parentPath : path.parent);
+                    if ((start && node.start === start) || !start) {
+                        ret.push(isPath ? path.parentPath : path.parent);
+                    }
                 }
             }
         });

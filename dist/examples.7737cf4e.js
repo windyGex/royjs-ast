@@ -68778,7 +68778,7 @@ var Element = function () {
 
     }, {
         key: 'find',
-        value: function find(name, isPath) {
+        value: function find(name, isPath, start) {
             this.ast = (0, _util.parse)(this.code);
             var ret = [];
             (0, _babelTraverse2.default)(this.ast, {
@@ -68787,7 +68787,9 @@ var Element = function () {
 
                     var nodeName = getNodeName(node);
                     if (nodeName === name) {
-                        ret.push(isPath ? path.parentPath : path.parent);
+                        if (start && node.start === start || !start) {
+                            ret.push(isPath ? path.parentPath : path.parent);
+                        }
                     }
                 }
             });
