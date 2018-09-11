@@ -32,6 +32,7 @@ export default class Element {
                     name: getNodeName(openingElement),
                     start: node.start,
                     end: node.end,
+                    loc: node.loc,
                     children: []
                 };
                 if (node.children) {

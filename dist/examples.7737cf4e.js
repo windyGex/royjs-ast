@@ -68619,6 +68619,7 @@ var Element = function () {
                         name: getNodeName(openingElement),
                         start: node.start,
                         end: node.end,
+                        loc: node.loc,
                         children: []
                     };
                     if (node.children) {
@@ -68795,6 +68796,15 @@ var Element = function () {
             });
             return ret;
         }
+    }, {
+        key: 'findByStart',
+        value: function findByStart(start) {
+            var callback = function callback(node, parent) {
+                return node.start === start;
+            };
+            var ret = this.findBy(callback);
+            return ret[0];
+        }
         /**
          * 寻找data-roy-id为id的节点
          * @param {String} id
@@ -68803,25 +68813,34 @@ var Element = function () {
     }, {
         key: 'findById',
         value: function findById(id) {
-            var _this = this;
+            var callback = function callback(node, parent) {
+                var attributes = node.attributes;
 
+                var index = this.indexAttr(parent, 'data-roy-id');
+                if (index > -1) {
+                    var value = attributes[index].value.value;
+                    if (value === id) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+            var ret = this.findBy(callback);
+            return ret[0];
+        }
+    }, {
+        key: 'findBy',
+        value: function findBy(callback) {
             this.ast = (0, _util.parse)(this.code);
-            var activeNode = void 0;
+            var ret = [];
             (0, _babelTraverse2.default)(this.ast, {
                 JSXOpeningElement: function JSXOpeningElement(path) {
-                    var node = path.node;
-                    var attributes = node.attributes;
-
-                    var index = _this.indexAttr(path.parent, 'data-roy-id');
-                    if (index > -1) {
-                        var value = attributes[index].value.value;
-                        if (value === id) {
-                            activeNode = path.parent;
-                        }
+                    if (callback(path.node, path.parent)) {
+                        ret.push(path.parent);
                     }
                 }
             });
-            return activeNode;
+            return ret;
         }
     }]);
 
@@ -91187,7 +91206,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '64558' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '52912' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 
