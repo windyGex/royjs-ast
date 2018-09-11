@@ -181,26 +181,42 @@ export default class Element {
         });
         return ret;
     }
+    findByStart(start) {
+        const callback = function (node, parent) {
+            return node.start === start;
+        };
+        const ret = this.findBy(callback);
+        return ret[0];
+    }
     /**
      * 寻找data-roy-id为id的节点
      * @param {String} id
      */
     findById(id) {
+        const callback = function (node, parent) {
+            const { attributes } = node;
+            const index = this.indexAttr(parent, 'data-roy-id');
+            if (index > -1) {
+                const value = attributes[index].value.value;
+                if (value === id) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        const ret = this.findBy(callback);
+        return ret[0];
+    }
+    findBy(callback) {
         this.ast = parse(this.code);
-        let activeNode;
+        const ret = [];
         traverse(this.ast, {
             JSXOpeningElement: path => {
-                const { node } = path;
-                const { attributes } = node;
-                const index = this.indexAttr(path.parent, 'data-roy-id');
-                if (index > -1) {
-                    const value = attributes[index].value.value;
-                    if (value === id) {
-                        activeNode = path.parent;
-                    }
+                if (callback(path.node, path.parent)) {
+                    ret.push(path.parent);
                 }
             }
         });
-        return activeNode;
+        return ret;
     }
 }
