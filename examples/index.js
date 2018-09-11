@@ -88,6 +88,8 @@ class CodeApp extends React.Component {
         return (<div>
             <button onClick={() => this.edit('parse')}>findAllNode</button>
             <button onClick={() => this.edit('find', 'Table')}>findNode Table</button>
+            <button onClick={() => this.edit('findByStart', 120)}>findNode by start</button>
+            <button onClick={() => this.edit('cloneByStart', 120)}>cloneNode by start</button>
             <button onClick={() => this.edit('findById', 'uuid')}>findNode By data-roy-id</button>
             <button onClick={() => this.edit('attrs', 'Table', 'loading', 2)}>Attrs number Table</button>
             <button onClick={() => this.edit('attrs', 'Table', 'type', true)}>Attrs bool Table</button>

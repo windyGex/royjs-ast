@@ -68584,6 +68584,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } /* eslint-disable no-use-before-define*/
 
 
+var generate = function generate(ast) {
+    return (0, _babelGenerator2.default)(ast, {
+        jsonCompatibleStrings: true
+    });
+};
+
 var getNodeName = function getNodeName(openingElement) {
     var name = openingElement.name;
     if (name.type === 'JSXMemberExpression') {
@@ -68656,7 +68662,8 @@ var Element = function () {
                         obj.methods.push({
                             name: method.key.name,
                             start: method.start,
-                            end: method.end
+                            end: method.end,
+                            loc: method.loc
                         });
                     });
                     ret.class.push(obj);
@@ -68691,7 +68698,7 @@ var Element = function () {
                     attributes.push(ast.openingElement.attributes[0]);
                 }
             }
-            this.code = (0, _babelGenerator2.default)(this.ast).code;
+            this.code = generate(this.ast).code;
             return this.code;
         }
     }, {
@@ -68706,7 +68713,7 @@ var Element = function () {
                     node.openingElement.attributes.splice(index, 1);
                 }
             }
-            this.code = (0, _babelGenerator2.default)(this.ast).code;
+            this.code = generate(this.ast).code;
             return this.code;
         }
     }, {
@@ -68734,7 +68741,30 @@ var Element = function () {
             } else {
                 console.warn('Cant find ' + name + ' \u8282\u70B9');
             }
-            this.code = (0, _babelGenerator2.default)(this.ast).code;
+            this.code = generate(this.ast).code;
+            return this.code;
+        }
+    }, {
+        key: 'removeByStart',
+        value: function removeByStart(start) {
+            var path = this.findByStart(start, true);
+            if (path) {
+                path.remove();
+            }
+            this.code = generate(this.ast).code;
+            return this.code;
+        }
+    }, {
+        key: 'cloneByStart',
+        value: function cloneByStart(start) {
+            var path = this.findByStart(start, true);
+            if (path) {
+                var node = path.node;
+                var code = generate(node).code;
+                var ast = (0, _util.parseExpression)(code);
+                path.parentPath.node.children.push(ast);
+            }
+            this.code = generate(this.ast).code;
             return this.code;
         }
     }, {
@@ -68747,7 +68777,7 @@ var Element = function () {
                 var ast = (0, _util.parseExpression)(child);
                 node.children.push(ast);
             }
-            this.code = (0, _babelGenerator2.default)(this.ast).code;
+            this.code = generate(this.ast).code;
             return this.code;
         }
         /**
@@ -68768,7 +68798,7 @@ var Element = function () {
             } else {
                 console.warn('\u4E0D\u5B58\u5728' + oldName + '\u8282\u70B9!');
             }
-            this.code = (0, _babelGenerator2.default)(this.ast).code;
+            this.code = generate(this.ast).code;
             return this.code;
         }
         /**
@@ -68798,21 +68828,22 @@ var Element = function () {
         }
     }, {
         key: 'findByStart',
-        value: function findByStart(start) {
+        value: function findByStart(start, isPath) {
             var callback = function callback(node, parent) {
                 return node.start === start;
             };
-            var ret = this.findBy(callback);
+            var ret = this.findBy(callback, isPath);
             return ret[0];
         }
         /**
          * 寻找data-roy-id为id的节点
          * @param {String} id
+         * @deprecated
          */
 
     }, {
         key: 'findById',
-        value: function findById(id) {
+        value: function findById(id, isPath) {
             var callback = function callback(node, parent) {
                 var attributes = node.attributes;
 
@@ -68825,18 +68856,18 @@ var Element = function () {
                 }
                 return false;
             };
-            var ret = this.findBy(callback);
+            var ret = this.findBy(callback, isPath);
             return ret[0];
         }
     }, {
         key: 'findBy',
-        value: function findBy(callback) {
+        value: function findBy(callback, isPath) {
             this.ast = (0, _util.parse)(this.code);
             var ret = [];
             (0, _babelTraverse2.default)(this.ast, {
                 JSXOpeningElement: function JSXOpeningElement(path) {
                     if (callback(path.node, path.parent)) {
-                        ret.push(path.parent);
+                        ret.push(isPath ? path.parentPath : path.parent);
                     }
                 }
             });
@@ -91106,6 +91137,20 @@ var CodeApp = function (_React$Component2) {
                 _react2.default.createElement(
                     'button',
                     { onClick: function onClick() {
+                            return _this4.edit('findByStart', 120);
+                        } },
+                    'findNode by start'
+                ),
+                _react2.default.createElement(
+                    'button',
+                    { onClick: function onClick() {
+                            return _this4.edit('cloneByStart', 120);
+                        } },
+                    'cloneNode by start'
+                ),
+                _react2.default.createElement(
+                    'button',
+                    { onClick: function onClick() {
                             return _this4.edit('findById', 'uuid');
                         } },
                     'findNode By data-roy-id'
@@ -91206,7 +91251,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '52912' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '58820' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 

@@ -1,8 +1,14 @@
 /* eslint-disable no-use-before-define*/
 import traverse from 'babel-traverse';
-import generate from 'babel-generator';
+import babelGenerate from 'babel-generator';
 import * as t from 'babel-types';
 import { parse, parseExpression } from './util';
+
+const generate = function (ast) {
+    return babelGenerate(ast, {
+        jsonCompatibleStrings: true
+    });
+};
 
 const getNodeName = function getNodeName(openingElement) {
     let name = openingElement.name;
@@ -67,7 +73,8 @@ export default class Element {
                     obj.methods.push({
                         name: method.key.name,
                         start: method.start,
-                        end: method.end
+                        end: method.end,
+                        loc: method.loc
                     });
                 });
                 ret.class.push(obj);
@@ -132,6 +139,25 @@ export default class Element {
         this.code = generate(this.ast).code;
         return this.code;
     }
+    removeByStart(start) {
+        const path = this.findByStart(start, true);
+        if (path) {
+            path.remove();
+        }
+        this.code = generate(this.ast).code;
+        return this.code;
+    }
+    cloneByStart(start) {
+        const path = this.findByStart(start, true);
+        if (path) {
+            const node = path.node;
+            const code = generate(node).code;
+            const ast = parseExpression(code);
+            path.parentPath.node.children.push(ast);
+        }
+        this.code = generate(this.ast).code;
+        return this.code;
+    }
     add(node, child) {
         if (typeof node === 'string') {
             node = this.find(node)[0];
@@ -182,18 +208,19 @@ export default class Element {
         });
         return ret;
     }
-    findByStart(start) {
+    findByStart(start, isPath) {
         const callback = function (node, parent) {
             return node.start === start;
         };
-        const ret = this.findBy(callback);
+        const ret = this.findBy(callback, isPath);
         return ret[0];
     }
     /**
      * 寻找data-roy-id为id的节点
      * @param {String} id
+     * @deprecated
      */
-    findById(id) {
+    findById(id, isPath) {
         const callback = function (node, parent) {
             const { attributes } = node;
             const index = this.indexAttr(parent, 'data-roy-id');
@@ -205,16 +232,16 @@ export default class Element {
             }
             return false;
         };
-        const ret = this.findBy(callback);
+        const ret = this.findBy(callback, isPath);
         return ret[0];
     }
-    findBy(callback) {
+    findBy(callback, isPath) {
         this.ast = parse(this.code);
         const ret = [];
         traverse(this.ast, {
             JSXOpeningElement: path => {
                 if (callback(path.node, path.parent)) {
-                    ret.push(path.parent);
+                    ret.push(isPath ? path.parentPath : path.parent);
                 }
             }
         });
