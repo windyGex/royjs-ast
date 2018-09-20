@@ -6,7 +6,10 @@ import { parse, parseExpression } from './util';
 
 const generate = function (ast) {
     return babelGenerate(ast, {
-        jsonCompatibleStrings: true
+        jsonCompatibleStrings: true,
+        jsescOption: {
+            minimal: true
+        }
     });
 };
 
@@ -210,7 +213,7 @@ export default class Element {
     }
     findByStart(start, isPath) {
         const callback = function (node, parent) {
-            return node.start === start;
+            return node.start === parseInt(start, 10);
         };
         const ret = this.findBy(callback, isPath);
         return ret[0];
