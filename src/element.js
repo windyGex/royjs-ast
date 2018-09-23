@@ -2,15 +2,17 @@
 import traverse from 'babel-traverse';
 import babelGenerate from 'babel-generator';
 import * as t from 'babel-types';
-import { parse, parseExpression } from './util';
+import { parse, parseExpression, decodeUnicode } from './util';
 
 const generate = function (ast) {
-    return babelGenerate(ast, {
+    const ret = babelGenerate(ast, {
         jsonCompatibleStrings: true,
         jsescOption: {
             minimal: true
         }
     });
+    ret.code = decodeUnicode(ret.code);
+    return ret;
 };
 
 const getNodeName = function getNodeName(openingElement) {
@@ -156,7 +158,10 @@ export default class Element {
             const node = path.node;
             const code = generate(node).code;
             const ast = parseExpression(code);
-            path.parentPath.node.children.push(ast);
+            const children = path.parentPath.node.children;
+            const index = children.indexOf(node);
+            // .push(ast);
+            children.splice(index, 0, ast);
         }
         this.code = generate(this.ast).code;
         return this.code;
@@ -224,7 +229,7 @@ export default class Element {
      * @deprecated
      */
     findById(id, isPath) {
-        const callback = function (node, parent) {
+        const callback = (node, parent) => {
             const { attributes } = node;
             const index = this.indexAttr(parent, 'data-roy-id');
             if (index > -1) {

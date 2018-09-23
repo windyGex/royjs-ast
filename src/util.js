@@ -1,4 +1,5 @@
 import * as babylon from 'babylon';
+
 const CACHE = {};
 const config = {
     sourceType: 'module',
@@ -17,16 +18,17 @@ const config = {
     ]
 };
 export const parse = function parse(code) {
-    if (CACHE[code]) {
-        return CACHE[code];
-    }
+    // if (CACHE[code]) {
+    //     return CACHE[code];
+    // }
     const ast = babylon.parse(code, config);
-    CACHE[code] = ast;
+    // CACHE[code] = ast;
     return ast;
 };
 
 export const parseExpression = function parseExpression(code) {
-    return babylon.parseExpression(code, config);
+    const ast = babylon.parseExpression(code, config);
+    return ast;
 };
 
 export const updateCode = function updateCode(code, changes) {
@@ -36,5 +38,10 @@ export const updateCode = function updateCode(code, changes) {
         code = code.join('');
     });
     return code;
+};
+
+export const decodeUnicode = function decodeUnicode(str) {
+    str = str.replace(/\\u/g, '%u');
+    return unescape(str);
 };
 

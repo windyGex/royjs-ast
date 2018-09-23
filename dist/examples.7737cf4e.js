@@ -38364,7 +38364,7 @@ exports.tokTypes = types;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.updateCode = exports.parseExpression = exports.parse = undefined;
+exports.decodeUnicode = exports.updateCode = exports.parseExpression = exports.parse = undefined;
 
 var _babylon = require('babylon');
 
@@ -38378,16 +38378,17 @@ var config = {
     plugins: ['jsx', 'flow', 'doExpressions', 'objectRestSpread', 'decorators', 'classProperties', 'exportExtensions', 'asyncGenerators', 'functionBind', 'functionSent', 'dynamicImport']
 };
 var parse = exports.parse = function parse(code) {
-    if (CACHE[code]) {
-        return CACHE[code];
-    }
+    // if (CACHE[code]) {
+    //     return CACHE[code];
+    // }
     var ast = babylon.parse(code, config);
-    CACHE[code] = ast;
+    // CACHE[code] = ast;
     return ast;
 };
 
 var parseExpression = exports.parseExpression = function parseExpression(code) {
-    return babylon.parseExpression(code, config);
+    var ast = babylon.parseExpression(code, config);
+    return ast;
 };
 
 var updateCode = exports.updateCode = function updateCode(code, changes) {
@@ -38397,6 +38398,11 @@ var updateCode = exports.updateCode = function updateCode(code, changes) {
         code = code.join('');
     });
     return code;
+};
+
+var decodeUnicode = exports.decodeUnicode = function decodeUnicode(str) {
+    str = str.replace(/\\u/g, '%u');
+    return unescape(str);
 };
 },{"babylon":"../node_modules/babylon/lib/index.js"}],"../src/action.js":[function(require,module,exports) {
 'use strict';
@@ -68585,9 +68591,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 
 var generate = function generate(ast) {
-    return (0, _babelGenerator2.default)(ast, {
-        jsonCompatibleStrings: true
+    var ret = (0, _babelGenerator2.default)(ast, {
+        jsonCompatibleStrings: true,
+        jsescOption: {
+            minimal: true
+        }
     });
+    ret.code = (0, _util.decodeUnicode)(ret.code);
+    return ret;
 };
 
 var getNodeName = function getNodeName(openingElement) {
@@ -68762,7 +68773,10 @@ var Element = function () {
                 var node = path.node;
                 var code = generate(node).code;
                 var ast = (0, _util.parseExpression)(code);
-                path.parentPath.node.children.push(ast);
+                var children = path.parentPath.node.children;
+                var index = children.indexOf(node);
+                // .push(ast);
+                children.splice(index, 0, ast);
             }
             this.code = generate(this.ast).code;
             return this.code;
@@ -68830,7 +68844,7 @@ var Element = function () {
         key: 'findByStart',
         value: function findByStart(start, isPath) {
             var callback = function callback(node, parent) {
-                return node.start === start;
+                return node.start === parseInt(start, 10);
             };
             var ret = this.findBy(callback, isPath);
             return ret[0];
@@ -68844,10 +68858,12 @@ var Element = function () {
     }, {
         key: 'findById',
         value: function findById(id, isPath) {
+            var _this = this;
+
             var callback = function callback(node, parent) {
                 var attributes = node.attributes;
 
-                var index = this.indexAttr(parent, 'data-roy-id');
+                var index = _this.indexAttr(parent, 'data-roy-id');
                 if (index > -1) {
                     var value = attributes[index].value.value;
                     if (value === id) {
@@ -91082,7 +91098,7 @@ var App = function (_React$Component) {
     return App;
 }(_react2.default.Component);
 
-var nodeCode = '\nconst e = <div></div>;\nclass App extends React.Component {\n\n\trender() {\n    \treturn (<div className="test">\n          \t<Table>\n                  <Table.Column title></Table.Column>\n                  <Table.Column data-roy-id="uuid"></Table.Column>\n          \t</Table>\n          </div>);\n    }\n}\n';
+var nodeCode = '\nconst e = <div></div>;\nclass App extends React.Component {\n\n\trender() {\n    \treturn (<div className="test">\n          \t<Table>\n                  <Table.Column title="\u6D4B\u8BD5\u4E2D\u6587"></Table.Column>\n                  <Table.Column data-roy-id="uuid"></Table.Column>\n          \t</Table>\n          </div>);\n    }\n}\n';
 
 var CodeApp = function (_React$Component2) {
     _inherits(CodeApp, _React$Component2);
@@ -91251,7 +91267,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '52356' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '51721' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 

@@ -61,7 +61,7 @@ class App extends React.Component {
 	render() {
     	return (<div className="test">
           	<Table>
-                  <Table.Column title></Table.Column>
+                  <Table.Column title="测试中文"></Table.Column>
                   <Table.Column data-roy-id="uuid"></Table.Column>
           	</Table>
           </div>);
