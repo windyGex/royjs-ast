@@ -38436,14 +38436,46 @@ var Action = function () {
         key: 'parse',
         value: function parse() {
             var ast = (0, _util.parse)(this.code);
-            var ret = [];
+            var code = this.code;
+            var ret = {
+                state: [],
+                actions: [],
+                urls: []
+            };
             (0, _babelTraverse2.default)(ast, {
-                Property: function Property(path) {
+                ObjectProperty: function ObjectProperty(path) {
                     var node = path.node;
 
+                    if (node.key.name === 'state') {
+                        node.value.properties.forEach(function (prop) {
+                            ret.state.push({
+                                name: prop.key.name,
+                                value: code.substring(prop.value.start, prop.value.end)
+                            });
+                        });
+                    }
                     if (node.key.name === 'actions' && node.value.type === 'ObjectExpression') {
                         node.value.properties.forEach(function (prop) {
-                            ret.push(prop.key.name);
+                            ret.actions.push({
+                                name: prop.key.name,
+                                value: code.substring(prop.start, prop.end)
+                            });
+                        });
+                    }
+                },
+                CallExpression: function CallExpression(path) {
+                    var _path$node = path.node,
+                        callee = _path$node.callee,
+                        args = _path$node.arguments;
+                    // this.request(url),
+                    // this.request.post(url),
+                    // this.request.get(url)
+
+                    if (callee.type === 'MemberExpression' && callee.object.type === 'ThisExpression' && callee.property.name === 'request' || callee.type === 'MemberExpression' && callee.object.type === 'MemberExpression' && ['get', 'post'].indexOf(callee.property.name) > -1) {
+                        args.forEach(function (arg) {
+                            if (arg.type === 'StringLiteral') {
+                                ret.urls.push(arg);
+                            }
                         });
                     }
                 }
@@ -38465,6 +38497,69 @@ var Action = function () {
                             start: node.start,
                             end: node.end + (isLast ? 0 : 1),
                             replacement: ''
+                        });
+                    }
+                }
+            });
+            this.code = (0, _util.updateCode)(this.code, changes);
+            return this.code;
+        }
+    }, {
+        key: 'renameState',
+        value: function renameState(oldName, newName) {
+            var ast = (0, _util.parse)(this.code);
+            var changes = [];
+            (0, _babelTraverse2.default)(ast, {
+                ObjectProperty: function ObjectProperty(path) {
+                    var node = path.node;
+
+                    if (assertStateName(path, oldName)) {
+                        changes.push({
+                            start: node.key.start,
+                            end: node.key.end,
+                            replacement: newName
+                        });
+                    }
+                }
+            });
+            this.code = (0, _util.updateCode)(this.code, changes);
+            return this.code;
+        }
+    }, {
+        key: 'modifyState',
+        value: function modifyState(name, value) {
+            var ast = (0, _util.parse)(this.code);
+            var changes = [];
+            (0, _babelTraverse2.default)(ast, {
+                ObjectProperty: function ObjectProperty(path) {
+                    var node = path.node;
+
+                    if (assertStateName(path, name)) {
+                        changes.push({
+                            start: node.value.start,
+                            end: node.value.end,
+                            replacement: value
+                        });
+                    }
+                }
+            });
+            this.code = (0, _util.updateCode)(this.code, changes);
+            return this.code;
+        }
+    }, {
+        key: 'modify',
+        value: function modify(name, content) {
+            var ast = (0, _util.parse)(this.code);
+            var changes = [];
+            (0, _babelTraverse2.default)(ast, {
+                ObjectMethod: function ObjectMethod(path) {
+                    var node = path.node;
+
+                    if (assertName(path, name)) {
+                        changes.push({
+                            start: node.start,
+                            end: node.end,
+                            replacement: content
                         });
                     }
                 }
@@ -38498,12 +38593,15 @@ var Action = function () {
         value: function add(name) {
             var _this = this;
 
-            var list = this.parse();
+            var ret = this.parse();
+            var list = ret.actions.map(function (item) {
+                return item.name;
+            });
             var changes = [];
             if (list.indexOf(name) > -1) {
                 console.warn('\u5B58\u5728\u540C\u540D\u7684action ' + name);
             } else {
-                var tpl = '\n' + name + '(state, payload) {\n\n      }';
+                var tpl = '\n\t' + name + '(state, payload) {\n\n      \t}';
                 var ast = (0, _util.parse)(this.code);
                 var lastAction = list[list.length - 1];
                 (0, _babelTraverse2.default)(ast, {
@@ -38524,17 +38622,33 @@ var Action = function () {
                 return this.code;
             }
         }
+    }, {
+        key: 'modifyUrl',
+        value: function modifyUrl(node, url) {
+            var changes = [{
+                start: node.start,
+                end: node.end,
+                replacement: url
+            }];
+            this.code = (0, _util.updateCode)(this.code, changes);
+            return this.code;
+        }
     }]);
 
     return Action;
 }();
 
 exports.default = Action;
-;
+
 
 function assertName(path, name) {
     var node = path.node;
     return node.key.name === name && path.parentPath.parent.key.name === 'actions';
+}
+
+function assertStateName(path, name) {
+    var node = path.node;
+    return node.key.name === name && path.parentPath.parent.key && path.parentPath.parent.key.name === 'state';
 }
 module.exports = exports['default'];
 },{"babel-traverse":"../node_modules/babel-traverse/lib/index.js","./util":"../src/util.js"}],"../node_modules/babel-generator/node_modules/babel-runtime/helpers/classCallCheck.js":[function(require,module,exports) {
@@ -91031,7 +91145,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var code = '\nconst logger = function (store) {\n    store.subscribe(obj => {\n        console.log(obj.type, obj.payload, obj.state.toJSON());\n    });\n};\n\nconst store = new Store({\n    state: {\n        count: 0\n    },\n    actions: {\n        add(state, payload) {\n            const {count} = state;\n            state.set(\'count\', count + 1);\n        },\n        reduce(state, payload) {\n            const {count} = state;\n            state.set(\'count\', count - 1);\n        },\n        asyncAdd(state, payload) {\n            setTimeout(() => {\n                this.dispatch(\'add\');\n            }, 500);\n        }\n    }\n}, {\n    plugins: [logger, devtools]\n});\n';
+var code = '\nconst logger = function (store) {\n    store.subscribe(obj => {\n        console.log(obj.type, obj.payload, obj.state.toJSON());\n    });\n};\n\nconst store = new Store({\n    state: {\n        count: 0,\n        ds: [],\n        test: {\n            a: 1\n        },\n        bool: true\n    },\n    actions: {\n        add(state, payload) {\n            const {count} = state;\n            state.set(\'count\', count + 1);\n        },\n        reduce(state, payload) {\n            const {count} = state;\n            state.set(\'count\', count - 1);\n        },\n        asyncAdd(state, payload) {\n            setTimeout(() => {\n                this.dispatch(\'add\');\n            }, 500);\n        },\n        fetch(state, payload) {\n            this.request.post(\'url\');\n        }\n    }\n}, {\n    plugins: [logger, devtools]\n});\n';
 
 var App = function (_React$Component) {
     _inherits(App, _React$Component);
@@ -91058,6 +91172,11 @@ var App = function (_React$Component) {
     }
 
     _createClass(App, [{
+        key: 'componentDidMount',
+        value: function componentDidMount() {
+            console.log(this.action.parse());
+        }
+    }, {
         key: 'render',
         value: function render() {
             var _this2 = this;
@@ -91085,6 +91204,37 @@ var App = function (_React$Component) {
                             return _this2.edit('remove', 'add');
                         } },
                     'Remove add action'
+                ),
+                _react2.default.createElement(
+                    'button',
+                    { onClick: function onClick() {
+                            return _this2.edit('modify', 'add', 'add(state, payload) {}');
+                        } },
+                    'modify add action'
+                ),
+                _react2.default.createElement(
+                    'button',
+                    { onClick: function onClick() {
+                            return _this2.edit('modifyState', 'count', '1');
+                        } },
+                    'modify count state'
+                ),
+                _react2.default.createElement(
+                    'button',
+                    { onClick: function onClick() {
+                            return _this2.edit('renameState', 'ds', 'dataSource');
+                        } },
+                    'rename ds state'
+                ),
+                _react2.default.createElement(
+                    'button',
+                    { onClick: function onClick() {
+                            return _this2.edit('modifyUrl', {
+                                start: 737,
+                                end: 742
+                            }, '"testurl"');
+                        } },
+                    'modify url'
                 ),
                 _react2.default.createElement(
                     'pre',
@@ -91267,7 +91417,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '51721' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '58574' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 

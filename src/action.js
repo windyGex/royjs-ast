@@ -1,6 +1,6 @@
 /* eslint-disable no-use-before-define, consistent-return*/
 import traverse from 'babel-traverse';
-import {parse, updateCode} from './util';
+import { parse, updateCode } from './util';
 
 export default class Action {
     constructor(code) {
@@ -8,16 +8,49 @@ export default class Action {
     }
     parse() {
         const ast = parse(this.code);
-        const ret = [];
+        const code = this.code;
+        const ret = {
+            state: [],
+            actions: [],
+            urls: []
+        };
         traverse(ast, {
-            Property(path) {
-                const {node} = path;
-                if (
-                    node.key.name === 'actions' &&
-          node.value.type === 'ObjectExpression'
-                ) {
+            ObjectProperty(path) {
+                const { node } = path;
+                if (node.key.name === 'state') {
                     node.value.properties.forEach(prop => {
-                        ret.push(prop.key.name);
+                        ret.state.push({
+                            name: prop.key.name,
+                            value: code.substring(prop.value.start, prop.value.end)
+                        });
+                    });
+                }
+                if (node.key.name === 'actions' && node.value.type === 'ObjectExpression') {
+                    node.value.properties.forEach(prop => {
+                        ret.actions.push({
+                            name: prop.key.name,
+                            value: code.substring(prop.start, prop.end)
+                        });
+                    });
+                }
+            },
+            CallExpression(path) {
+                const { callee, arguments: args } = path.node;
+                // this.request(url),
+                // this.request.post(url),
+                // this.request.get(url)
+                if (
+                    (callee.type === 'MemberExpression' &&
+                        callee.object.type === 'ThisExpression' &&
+                        callee.property.name === 'request') ||
+                    (callee.type === 'MemberExpression' &&
+                        callee.object.type === 'MemberExpression' &&
+                        ['get', 'post'].indexOf(callee.property.name) > -1)
+                ) {
+                    args.forEach(arg => {
+                        if (arg.type === 'StringLiteral') {
+                            ret.urls.push(arg);
+                        }
                     });
                 }
             }
@@ -29,15 +62,67 @@ export default class Action {
         const changes = [];
         traverse(ast, {
             ObjectMethod(path) {
-                const {node} = path;
+                const { node } = path;
                 if (assertName(path, name)) {
-                    const isLast =
-            path.parent.properties.indexOf(node) ===
-            path.parent.properties.length - 1;
+                    const isLast = path.parent.properties.indexOf(node) === path.parent.properties.length - 1;
                     changes.push({
                         start: node.start,
                         end: node.end + (isLast ? 0 : 1),
                         replacement: ''
+                    });
+                }
+            }
+        });
+        this.code = updateCode(this.code, changes);
+        return this.code;
+    }
+    renameState(oldName, newName) {
+        const ast = parse(this.code);
+        const changes = [];
+        traverse(ast,  {
+            ObjectProperty(path) {
+                const { node } = path;
+                if (assertStateName(path, oldName)) {
+                    changes.push({
+                        start: node.key.start,
+                        end: node.key.end,
+                        replacement: newName
+                    });
+                }
+            }
+        });
+        this.code = updateCode(this.code, changes);
+        return this.code;
+    }
+    modifyState(name, value) {
+        const ast = parse(this.code);
+        const changes = [];
+        traverse(ast, {
+            ObjectProperty(path) {
+                const { node } = path;
+                if (assertStateName(path, name)) {
+                    changes.push({
+                        start: node.value.start,
+                        end: node.value.end,
+                        replacement: value
+                    });
+                }
+            }
+        });
+        this.code = updateCode(this.code, changes);
+        return this.code;
+    }
+    modify(name, content) {
+        const ast = parse(this.code);
+        const changes = [];
+        traverse(ast, {
+            ObjectMethod(path) {
+                const { node } = path;
+                if (assertName(path, name)) {
+                    changes.push({
+                        start: node.start,
+                        end: node.end,
+                        replacement: content
                     });
                 }
             }
@@ -50,7 +135,7 @@ export default class Action {
         const changes = [];
         traverse(ast, {
             ObjectMethod(path) {
-                const {node} = path;
+                const { node } = path;
                 if (assertName(path, oldName)) {
                     changes.push({
                         start: node.key.start,
@@ -64,19 +149,20 @@ export default class Action {
         return this.code;
     }
     add(name) {
-        const list = this.parse();
+        const ret = this.parse();
+        const list = ret.actions.map(item => item.name);
         const changes = [];
         if (list.indexOf(name) > -1) {
             console.warn(`存在同名的action ${name}`);
         } else {
-            const tpl = `\n${name}(state, payload) {
+            const tpl = `\n\t${name}(state, payload) {
 
-      }`;
+      \t}`;
             const ast = parse(this.code);
             const lastAction = list[list.length - 1];
             traverse(ast, {
-                ObjectMethod: (path) => {
-                    const {node} = path;
+                ObjectMethod: path => {
+                    const { node } = path;
                     if (assertName(path, lastAction)) {
                         const hasComma = this.code.charAt(node.end + 1) === ',';
                         changes.push({
@@ -91,10 +177,25 @@ export default class Action {
             return this.code;
         }
     }
-};
+    modifyUrl(node, url) {
+        const changes = [
+            {
+                start: node.start,
+                end: node.end,
+                replacement: url
+            }
+        ];
+        this.code = updateCode(this.code, changes);
+        return this.code;
+    }
+}
 
 function assertName(path, name) {
     const node = path.node;
-    return node.key.name === name &&
-    path.parentPath.parent.key.name === 'actions';
+    return node.key.name === name && path.parentPath.parent.key.name === 'actions';
+}
+
+function assertStateName(path, name) {
+    const node = path.node;
+    return node.key.name === name && path.parentPath.parent.key && path.parentPath.parent.key.name === 'state';
 }

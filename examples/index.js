@@ -11,7 +11,12 @@ const logger = function (store) {
 
 const store = new Store({
     state: {
-        count: 0
+        count: 0,
+        ds: [],
+        test: {
+            a: 1
+        },
+        bool: true
     },
     actions: {
         add(state, payload) {
@@ -26,6 +31,9 @@ const store = new Store({
             setTimeout(() => {
                 this.dispatch('add');
             }, 500);
+        },
+        fetch(state, payload) {
+            this.request.post('url');
         }
     }
 }, {
@@ -44,11 +52,21 @@ class App extends React.Component {
             code
         });
     }
+    componentDidMount() {
+        console.log(this.action.parse());
+    }
     render() {
         return (<div>
             <button onClick={() => this.edit('add', 'test')}>Add test action</button>
             <button onClick={() => this.edit('rename', 'reduce', 'plus')}>Rename reduce action</button>
             <button onClick={() => this.edit('remove', 'add')}>Remove add action</button>
+            <button onClick={() => this.edit('modify', 'add', 'add(state, payload) {}')}>modify add action</button>
+            <button onClick={() => this.edit('modifyState', 'count', '1')}>modify count state</button>
+            <button onClick={() => this.edit('renameState', 'ds', 'dataSource')}>rename ds state</button>
+            <button onClick={() => this.edit('modifyUrl', {
+                start: 737,
+                end: 742
+            }, '"testurl"')}>modify url</button>
             <pre>{this.state.code}</pre>
         </div>);
     }
