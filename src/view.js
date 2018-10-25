@@ -24,10 +24,17 @@ const getNodeName = function getNodeName(openingElement) {
     return name.name;
 };
 
-export default class Element {
+/**
+ * 解析Royjs的视图数据
+ */
+export default class View {
     constructor(code) {
         this.code = code;
     }
+    /**
+     * 解析视图数据
+     * @return 返回 class和elements值
+     */
     parse() {
         this.ast = parse(this.code);
         const ret = {
@@ -112,6 +119,11 @@ export default class Element {
         this.code = generate(this.ast).code;
         return this.code;
     }
+    /**
+     * 移除一个节点属性
+     * @param {Node | String} node
+     * @param {String} name  要移除的属性名称
+     */
     removeAttr(node, name) {
         if (typeof node === 'string') {
             node = this.find(node)[0];
@@ -134,6 +146,10 @@ export default class Element {
     hasAttr(node, name) {
         return this.indexAttr(node, name) > -1;
     }
+    /**
+     * 根据名称移除一个节点
+     * @param {String} name
+     */
     remove(name) {
         const path = this.find(name, true)[0];
         if (path) {
@@ -144,6 +160,10 @@ export default class Element {
         this.code = generate(this.ast).code;
         return this.code;
     }
+    /**
+     * 根据起始位置移除一个节点
+     * @param {String | Int} start
+     */
     removeByStart(start) {
         const path = this.findByStart(start, true);
         if (path) {
@@ -152,6 +172,10 @@ export default class Element {
         this.code = generate(this.ast).code;
         return this.code;
     }
+    /**
+     * 根据起始位置复制一个节点
+     * @param {String | Int} start
+     */
     cloneByStart(start) {
         const path = this.findByStart(start, true);
         if (path) {
@@ -166,6 +190,11 @@ export default class Element {
         this.code = generate(this.ast).code;
         return this.code;
     }
+    /**
+     * 为一个节点加入子节点
+     * @param {String | node} node 父节点
+     * @param {String} child 子节点的代码
+     */
     add(node, child) {
         if (typeof node === 'string') {
             node = this.find(node)[0];
@@ -216,6 +245,11 @@ export default class Element {
         });
         return ret;
     }
+    /**
+     * 根据起始位置寻找节点，如果第二个参数为true，则返回节点的路径
+     * @param {String | Int} start
+     * @param {Boolean} isPath
+     */
     findByStart(start, isPath) {
         const callback = function (node, parent) {
             return node.start === parseInt(start, 10);
@@ -223,11 +257,6 @@ export default class Element {
         const ret = this.findBy(callback, isPath);
         return ret[0];
     }
-    /**
-     * 寻找data-roy-id为id的节点
-     * @param {String} id
-     * @deprecated
-     */
     findById(id, isPath) {
         const callback = (node, parent) => {
             const { attributes } = node;
@@ -243,6 +272,11 @@ export default class Element {
         const ret = this.findBy(callback, isPath);
         return ret[0];
     }
+    /**
+     * 根据callback过滤节点，如果第二个参数为true，则返回节点的路径
+     * @param {Function} callback
+     * @param {Boolean} isPath
+     */
     findBy(callback, isPath) {
         this.ast = parse(this.code);
         const ret = [];

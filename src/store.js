@@ -2,10 +2,17 @@
 import traverse from 'babel-traverse';
 import { parse, updateCode } from './util';
 
-export default class Action {
+/**
+ * 解析Royjs的Store数据
+ */
+export default class Store {
     constructor(code) {
         this.code = code;
     }
+    /**
+     * 解析store文件
+     * @return 返回state，actions，urls
+     */
     parse() {
         const ast = parse(this.code);
         const code = this.code;
@@ -57,6 +64,11 @@ export default class Action {
         });
         return ret;
     }
+    /**
+     * 根据name移除某个定义的action
+     * @param {String} name action的名字
+     * @return 修改后的代码
+     */
     remove(name) {
         const ast = parse(this.code);
         const changes = [];
@@ -76,10 +88,16 @@ export default class Action {
         this.code = updateCode(this.code, changes);
         return this.code;
     }
+    /**
+     * 重命名某个state
+     * @param {String} oldName 旧的state的名字
+     * @param {String} newName 新的state的名字
+     * @return 修改后的代码
+     */
     renameState(oldName, newName) {
         const ast = parse(this.code);
         const changes = [];
-        traverse(ast,  {
+        traverse(ast, {
             ObjectProperty(path) {
                 const { node } = path;
                 if (assertStateName(path, oldName)) {
@@ -94,6 +112,12 @@ export default class Action {
         this.code = updateCode(this.code, changes);
         return this.code;
     }
+    /**
+     * 修改状态的值
+     * @param {String} name 状态的名称
+     * @param {String} value 状态的值
+     * @return 修改后的代码
+     */
     modifyState(name, value) {
         const ast = parse(this.code);
         const changes = [];
@@ -112,6 +136,12 @@ export default class Action {
         this.code = updateCode(this.code, changes);
         return this.code;
     }
+    /**
+     * 根据action的名字，修改action内容
+     * @param {String} name action的名字
+     * @param {String} content action的内容
+     * @return 修改后的代码
+     */
     modify(name, content) {
         const ast = parse(this.code);
         const changes = [];
@@ -130,6 +160,12 @@ export default class Action {
         this.code = updateCode(this.code, changes);
         return this.code;
     }
+    /**
+     * 重命名某个action
+     * @param {String} oldName action的名称
+     * @param {String} newName action的新的名称
+     * @return 修改后的代码
+     */
     rename(oldName, newName) {
         const ast = parse(this.code);
         const changes = [];
@@ -148,6 +184,11 @@ export default class Action {
         this.code = updateCode(this.code, changes);
         return this.code;
     }
+    /**
+     * 增加一个action， 如果存在同名action则不会添加
+     * @param {String} name action的名称
+     * @return 修改后的代码
+     */
     add(name) {
         const ret = this.parse();
         const list = ret.actions.map(item => item.name);
@@ -177,6 +218,12 @@ export default class Action {
             return this.code;
         }
     }
+    /**
+     * 修改store中请求url
+     * @param {Node} node 指定的节点，该节点需包含start和end两个属性
+     * @param {String} url  替换的URL
+     * @return 返回修改的代码
+     */
     modifyUrl(node, url) {
         const changes = [
             {
