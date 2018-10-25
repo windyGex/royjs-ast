@@ -1,6 +1,6 @@
 {
   "name": "@royjs/ast",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A quick static tools for royjs",
   "main": "lib/index.js",
   "scripts": {
@@ -9,7 +9,7 @@
     "dev": "webpack --progress --colors --watch --env dev",
     "test": "mocha --require babel-core/register --colors ./test/*.spec.js",
     "test:watch": "mocha --require babel-core/register --colors -w ./test/*.spec.js",
-    "prepublish": "npm run build",
+    "prepublish": "npm run build && npm run build:umd",
     "example": "parcel examples/index.html",
     "docs": "node ./scripts/docs.js"
   },
