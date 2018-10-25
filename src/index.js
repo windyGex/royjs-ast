@@ -7,3 +7,9 @@ export const Element = ElementNode;
 
 export const Store = ActionNode;
 export const View = ElementNode;
+
+export default {
+    Store: ActionNode,
+    View: ElementNode
+};
+
