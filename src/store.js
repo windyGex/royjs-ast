@@ -5,7 +5,11 @@ import { parse, updateCode } from './util';
 /**
  * 解析Royjs的Store数据
  */
-export default class Store {
+class Store {
+    /**
+     * Store的构造函数
+     * @param {String} code 传入的store的代码
+     */
     constructor(code) {
         this.code = code;
     }
@@ -246,3 +250,5 @@ function assertStateName(path, name) {
     const node = path.node;
     return node.key.name === name && path.parentPath.parent.key && path.parentPath.parent.key.name === 'state';
 }
+
+export default Store;

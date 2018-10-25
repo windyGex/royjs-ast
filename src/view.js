@@ -27,7 +27,11 @@ const getNodeName = function getNodeName(openingElement) {
 /**
  * 解析Royjs的视图数据
  */
-export default class View {
+class View {
+    /**
+     * View的构造函数
+     * @param {String} code 传入的view的代码
+     */
     constructor(code) {
         this.code = code;
     }
@@ -290,3 +294,5 @@ export default class View {
         return ret;
     }
 }
+
+export default View;

@@ -38404,7 +38404,7 @@ var decodeUnicode = exports.decodeUnicode = function decodeUnicode(str) {
     str = str.replace(/\\u/g, '%u');
     return unescape(str);
 };
-},{"babylon":"../node_modules/babylon/lib/index.js"}],"../src/action.js":[function(require,module,exports) {
+},{"babylon":"../node_modules/babylon/lib/index.js"}],"../src/store.js":[function(require,module,exports) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -38425,14 +38425,22 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } /* eslint-disable no-use-before-define, consistent-return*/
 
 
-var Action = function () {
-    function Action(code) {
-        _classCallCheck(this, Action);
+/**
+ * 解析Royjs的Store数据
+ */
+var Store = function () {
+    function Store(code) {
+        _classCallCheck(this, Store);
 
         this.code = code;
     }
+    /**
+     * 解析store文件
+     * @return 返回state，actions，urls
+     */
 
-    _createClass(Action, [{
+
+    _createClass(Store, [{
         key: 'parse',
         value: function parse() {
             var ast = (0, _util.parse)(this.code);
@@ -38482,6 +38490,12 @@ var Action = function () {
             });
             return ret;
         }
+        /**
+         * 根据name移除某个定义的action
+         * @param {String} name action的名字
+         * @return 修改后的代码
+         */
+
     }, {
         key: 'remove',
         value: function remove(name) {
@@ -38504,6 +38518,13 @@ var Action = function () {
             this.code = (0, _util.updateCode)(this.code, changes);
             return this.code;
         }
+        /**
+         * 重命名某个state
+         * @param {String} oldName 旧的state的名字
+         * @param {String} newName 新的state的名字
+         * @return 修改后的代码
+         */
+
     }, {
         key: 'renameState',
         value: function renameState(oldName, newName) {
@@ -38525,6 +38546,13 @@ var Action = function () {
             this.code = (0, _util.updateCode)(this.code, changes);
             return this.code;
         }
+        /**
+         * 修改状态的值
+         * @param {String} name 状态的名称
+         * @param {String} value 状态的值
+         * @return 修改后的代码
+         */
+
     }, {
         key: 'modifyState',
         value: function modifyState(name, value) {
@@ -38546,6 +38574,13 @@ var Action = function () {
             this.code = (0, _util.updateCode)(this.code, changes);
             return this.code;
         }
+        /**
+         * 根据action的名字，修改action内容
+         * @param {String} name action的名字
+         * @param {String} content action的内容
+         * @return 修改后的代码
+         */
+
     }, {
         key: 'modify',
         value: function modify(name, content) {
@@ -38567,6 +38602,13 @@ var Action = function () {
             this.code = (0, _util.updateCode)(this.code, changes);
             return this.code;
         }
+        /**
+         * 重命名某个action
+         * @param {String} oldName action的名称
+         * @param {String} newName action的新的名称
+         * @return 修改后的代码
+         */
+
     }, {
         key: 'rename',
         value: function rename(oldName, newName) {
@@ -38588,6 +38630,12 @@ var Action = function () {
             this.code = (0, _util.updateCode)(this.code, changes);
             return this.code;
         }
+        /**
+         * 增加一个action， 如果存在同名action则不会添加
+         * @param {String} name action的名称
+         * @return 修改后的代码
+         */
+
     }, {
         key: 'add',
         value: function add(name) {
@@ -38622,6 +38670,13 @@ var Action = function () {
                 return this.code;
             }
         }
+        /**
+         * 修改store中请求url
+         * @param {Node} node 指定的节点，该节点需包含start和end两个属性
+         * @param {String} url  替换的URL
+         * @return 返回修改的代码
+         */
+
     }, {
         key: 'modifyUrl',
         value: function modifyUrl(node, url) {
@@ -38635,10 +38690,10 @@ var Action = function () {
         }
     }]);
 
-    return Action;
+    return Store;
 }();
 
-exports.default = Action;
+exports.default = Store;
 
 
 function assertName(path, name) {
@@ -68673,7 +68728,7 @@ function removePropertiesDeep(tree, opts) {
   traverseFast(tree, removeProperties, opts);
   return tree;
 }
-},{"babel-runtime/core-js/object/get-own-property-symbols":"../node_modules/babel-types/node_modules/babel-runtime/core-js/object/get-own-property-symbols.js","babel-runtime/core-js/get-iterator":"../node_modules/babel-types/node_modules/babel-runtime/core-js/get-iterator.js","babel-runtime/core-js/object/keys":"../node_modules/babel-types/node_modules/babel-runtime/core-js/object/keys.js","babel-runtime/core-js/json/stringify":"../node_modules/babel-types/node_modules/babel-runtime/core-js/json/stringify.js","./constants":"../node_modules/babel-types/lib/constants.js","./retrievers":"../node_modules/babel-types/lib/retrievers.js","./validators":"../node_modules/babel-types/lib/validators.js","./converters":"../node_modules/babel-types/lib/converters.js","./flow":"../node_modules/babel-types/lib/flow.js","to-fast-properties":"../node_modules/babel-types/node_modules/to-fast-properties/index.js","lodash/clone":"../node_modules/babel-types/node_modules/lodash/clone.js","lodash/uniq":"../node_modules/babel-types/node_modules/lodash/uniq.js","./definitions/init":"../node_modules/babel-types/lib/definitions/init.js","./definitions":"../node_modules/babel-types/lib/definitions/index.js","./react":"../node_modules/babel-types/lib/react.js"}],"../src/element.js":[function(require,module,exports) {
+},{"babel-runtime/core-js/object/get-own-property-symbols":"../node_modules/babel-types/node_modules/babel-runtime/core-js/object/get-own-property-symbols.js","babel-runtime/core-js/get-iterator":"../node_modules/babel-types/node_modules/babel-runtime/core-js/get-iterator.js","babel-runtime/core-js/object/keys":"../node_modules/babel-types/node_modules/babel-runtime/core-js/object/keys.js","babel-runtime/core-js/json/stringify":"../node_modules/babel-types/node_modules/babel-runtime/core-js/json/stringify.js","./constants":"../node_modules/babel-types/lib/constants.js","./retrievers":"../node_modules/babel-types/lib/retrievers.js","./validators":"../node_modules/babel-types/lib/validators.js","./converters":"../node_modules/babel-types/lib/converters.js","./flow":"../node_modules/babel-types/lib/flow.js","to-fast-properties":"../node_modules/babel-types/node_modules/to-fast-properties/index.js","lodash/clone":"../node_modules/babel-types/node_modules/lodash/clone.js","lodash/uniq":"../node_modules/babel-types/node_modules/lodash/uniq.js","./definitions/init":"../node_modules/babel-types/lib/definitions/init.js","./definitions":"../node_modules/babel-types/lib/definitions/index.js","./react":"../node_modules/babel-types/lib/react.js"}],"../src/view.js":[function(require,module,exports) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -68724,14 +68779,23 @@ var getNodeName = function getNodeName(openingElement) {
     return name.name;
 };
 
-var Element = function () {
-    function Element(code) {
-        _classCallCheck(this, Element);
+/**
+ * 解析Royjs的视图数据
+ */
+
+var View = function () {
+    function View(code) {
+        _classCallCheck(this, View);
 
         this.code = code;
     }
+    /**
+     * 解析视图数据
+     * @return 返回 class和elements值
+     */
 
-    _createClass(Element, [{
+
+    _createClass(View, [{
         key: 'parse',
         value: function parse() {
             this.ast = (0, _util.parse)(this.code);
@@ -68826,6 +68890,12 @@ var Element = function () {
             this.code = generate(this.ast).code;
             return this.code;
         }
+        /**
+         * 移除一个节点属性
+         * @param {Node | String} node
+         * @param {String} name  要移除的属性名称
+         */
+
     }, {
         key: 'removeAttr',
         value: function removeAttr(node, name) {
@@ -68857,6 +68927,11 @@ var Element = function () {
         value: function hasAttr(node, name) {
             return this.indexAttr(node, name) > -1;
         }
+        /**
+         * 根据名称移除一个节点
+         * @param {String} name
+         */
+
     }, {
         key: 'remove',
         value: function remove(name) {
@@ -68869,6 +68944,11 @@ var Element = function () {
             this.code = generate(this.ast).code;
             return this.code;
         }
+        /**
+         * 根据起始位置移除一个节点
+         * @param {String | Int} start
+         */
+
     }, {
         key: 'removeByStart',
         value: function removeByStart(start) {
@@ -68879,6 +68959,11 @@ var Element = function () {
             this.code = generate(this.ast).code;
             return this.code;
         }
+        /**
+         * 根据起始位置复制一个节点
+         * @param {String | Int} start
+         */
+
     }, {
         key: 'cloneByStart',
         value: function cloneByStart(start) {
@@ -68895,6 +68980,12 @@ var Element = function () {
             this.code = generate(this.ast).code;
             return this.code;
         }
+        /**
+         * 为一个节点加入子节点
+         * @param {String | node} node 父节点
+         * @param {String} child 子节点的代码
+         */
+
     }, {
         key: 'add',
         value: function add(node, child) {
@@ -68954,6 +69045,12 @@ var Element = function () {
             });
             return ret;
         }
+        /**
+         * 根据起始位置寻找节点，如果第二个参数为true，则返回节点的路径
+         * @param {String | Int} start
+         * @param {Boolean} isPath
+         */
+
     }, {
         key: 'findByStart',
         value: function findByStart(start, isPath) {
@@ -68963,12 +69060,6 @@ var Element = function () {
             var ret = this.findBy(callback, isPath);
             return ret[0];
         }
-        /**
-         * 寻找data-roy-id为id的节点
-         * @param {String} id
-         * @deprecated
-         */
-
     }, {
         key: 'findById',
         value: function findById(id, isPath) {
@@ -68989,6 +69080,12 @@ var Element = function () {
             var ret = this.findBy(callback, isPath);
             return ret[0];
         }
+        /**
+         * 根据callback过滤节点，如果第二个参数为true，则返回节点的路径
+         * @param {Function} callback
+         * @param {Boolean} isPath
+         */
+
     }, {
         key: 'findBy',
         value: function findBy(callback, isPath) {
@@ -69005,10 +69102,10 @@ var Element = function () {
         }
     }]);
 
-    return Element;
+    return View;
 }();
 
-exports.default = Element;
+exports.default = View;
 module.exports = exports['default'];
 },{"babel-traverse":"../node_modules/babel-traverse/lib/index.js","babel-generator":"../node_modules/babel-generator/lib/index.js","babel-types":"../node_modules/babel-types/lib/index.js","./util":"../src/util.js"}],"../src/index.js":[function(require,module,exports) {
 'use strict';
@@ -69016,21 +69113,25 @@ module.exports = exports['default'];
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Element = exports.Action = undefined;
+exports.View = exports.Store = exports.Element = exports.Action = undefined;
 
-var _action = require('./action');
+var _store = require('./store');
 
-var _action2 = _interopRequireDefault(_action);
+var _store2 = _interopRequireDefault(_store);
 
-var _element = require('./element');
+var _view = require('./view');
 
-var _element2 = _interopRequireDefault(_element);
+var _view2 = _interopRequireDefault(_view);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var Action = exports.Action = _action2.default;
-var Element = exports.Element = _element2.default;
-},{"./action":"../src/action.js","./element":"../src/element.js"}],"../node_modules/react/node_modules/object-assign/index.js":[function(require,module,exports) {
+/* 兼容代码 */
+var Action = exports.Action = _store2.default;
+var Element = exports.Element = _view2.default;
+
+var Store = exports.Store = _store2.default;
+var View = exports.View = _view2.default;
+},{"./store":"../src/store.js","./view":"../src/view.js"}],"../node_modules/react/node_modules/object-assign/index.js":[function(require,module,exports) {
 /*
 object-assign
 (c) Sindre Sorhus
@@ -91417,7 +91518,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '58574' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '57038' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 
