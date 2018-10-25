@@ -1,6 +1,5 @@
 import * as babylon from 'babylon';
 
-const CACHE = {};
 const config = {
     sourceType: 'module',
     plugins: [
