@@ -1,6 +1,6 @@
 {
   "name": "@royjs/ast",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A quick static tools for royjs",
   "main": "lib/index.js",
   "scripts": {
@@ -24,10 +24,7 @@
     "test",
     "HISTORY.md",
     "README.md",
-    "index.js",
-    "router.js",
-    "request.js",
-    "devtools.js"
+    "index.js"
   ],
   "keywords": [
     "mvvm",
@@ -41,9 +38,9 @@
   "author": "xing.gex",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/windyGex/roy/issues"
+    "url": "https://github.com/windyGex/roy-ast/issues"
   },
-  "homepage": "https://github.com/windyGex/roy",
+  "homepage": "https://github.com/windyGex/roy-ast",
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",

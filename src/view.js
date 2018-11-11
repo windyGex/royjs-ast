@@ -111,7 +111,12 @@ class View {
         if (node) {
             const { openingElement } = node;
             const { attributes } = openingElement;
-            const templates = `<div ${name}={${value}}/>`;
+            let templates = `<div ${name}={${value}}/>`;
+            if (value === 'true' || value === true) {
+                templates = `<div ${name}/>`;
+            } else if (typeof value === 'string' && /^(['"]).*\1$/.test(value.trim())) {
+                templates = `<div ${name}=${value}/>`;
+            }
             const ast = parseExpression(templates);
             if (this.hasAttr(node, name)) {
                 const index = this.indexAttr(node, name);
@@ -186,10 +191,10 @@ class View {
             const node = path.node;
             const code = generate(node).code;
             const ast = parseExpression(code);
+            const returnElement = t.jSXText('\n');
             const children = path.parentPath.node.children;
             const index = children.indexOf(node);
-            // .push(ast);
-            children.splice(index, 0, ast);
+            children.splice(index + 1, 0, returnElement, ast);
         }
         this.code = generate(this.ast).code;
         return this.code;

@@ -107,11 +107,12 @@ class CodeApp extends React.Component {
             <button onClick={() => this.edit('parse')}>findAllNode</button>
             <button onClick={() => this.edit('find', 'Table')}>findNode Table</button>
             <button onClick={() => this.edit('findByStart', 120)}>findNode by start</button>
-            <button onClick={() => this.edit('cloneByStart', 120)}>cloneNode by start</button>
+            <button onClick={() => this.edit('cloneByStart', 146)}>cloneNode by start</button>
             <button onClick={() => this.edit('findById', 'uuid')}>findNode By data-roy-id</button>
             <button onClick={() => this.edit('attrs', 'Table', 'loading', 2)}>Attrs number Table</button>
             <button onClick={() => this.edit('attrs', 'Table', 'type', true)}>Attrs bool Table</button>
             <button onClick={() => this.edit('attrs', 'Table', 'rowSelection', "{a: 'b'}")}>Attrs object Table</button>
+            <button onClick={() => this.edit('attrs', 'Table', 'str', "'string'")}>Attrs string Table</button>
             <button onClick={() => this.edit('attrs', 'Table', 'rowSelection', "<div></div>")}>Attrs element Table</button>
             <button onClick={() => this.edit('rename', 'div', 'span')}>Rename div to span</button>
             <button onClick={() => this.edit('add', 'div', '<span>123</span>')}>Add span to div</button>
