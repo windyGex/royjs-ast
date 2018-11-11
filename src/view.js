@@ -1,8 +1,8 @@
 /* eslint-disable no-use-before-define*/
-import traverse from 'babel-traverse';
-import babelGenerate from 'babel-generator';
-import * as t from 'babel-types';
-import { parse, parseExpression, decodeUnicode } from './util';
+import traverse from '@babel/traverse';
+import babelGenerate from '@babel/generator';
+import * as t from '@babel/types';
+import { parse, parseExpression, decodeUnicode, formatter } from './util';
 
 const generate = function (ast) {
     const ret = babelGenerate(ast, {
@@ -125,7 +125,7 @@ class View {
                 attributes.push(ast.openingElement.attributes[0]);
             }
         }
-        this.code = generate(this.ast).code;
+        this.code = formatter(this.code, this.ast);
         return this.code;
     }
     /**
@@ -143,7 +143,7 @@ class View {
                 node.openingElement.attributes.splice(index, 1);
             }
         }
-        this.code = generate(this.ast).code;
+        this.code = formatter(this.code, this.ast);
         return this.code;
     }
     indexAttr(node, name) {
@@ -166,7 +166,7 @@ class View {
         } else {
             console.warn(`Cant find ${name} 节点`);
         }
-        this.code = generate(this.ast).code;
+        this.code = formatter(this.code, this.ast);
         return this.code;
     }
     /**
@@ -178,7 +178,7 @@ class View {
         if (path) {
             path.remove();
         }
-        this.code = generate(this.ast).code;
+        this.code = formatter(this.code, this.ast);
         return this.code;
     }
     /**
@@ -191,12 +191,12 @@ class View {
             const node = path.node;
             const code = generate(node).code;
             const ast = parseExpression(code);
-            const returnElement = t.jSXText('\n');
             const children = path.parentPath.node.children;
             const index = children.indexOf(node);
-            children.splice(index + 1, 0, returnElement, ast);
+            children.splice(index + 1, 0, ast);
         }
-        this.code = generate(this.ast).code;
+        // this.code = formatter(this.code, this.ast);
+        this.code = formatter(this.code, this.ast);
         return this.code;
     }
     /**
@@ -212,7 +212,7 @@ class View {
             const ast = parseExpression(child);
             node.children.push(ast);
         }
-        this.code = generate(this.ast).code;
+        this.code = formatter(this.code, this.ast);
         return this.code;
     }
     /**
@@ -230,7 +230,7 @@ class View {
         } else {
             console.warn(`不存在${oldName}节点!`);
         }
-        this.code = generate(this.ast).code;
+        this.code = formatter(this.code, this.ast);
         return this.code;
     }
     /**

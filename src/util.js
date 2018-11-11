@@ -1,4 +1,5 @@
-import * as babylon from 'babylon';
+import * as babylon from '@babel/parser';
+import prettier from 'prettier/standalone';
 
 const config = {
     sourceType: 'module',
@@ -7,7 +8,7 @@ const config = {
         'flow',
         'doExpressions',
         'objectRestSpread',
-        'decorators',
+        'decorators-legacy',
         'classProperties',
         'exportExtensions',
         'asyncGenerators',
@@ -44,3 +45,22 @@ export const decodeUnicode = function decodeUnicode(str) {
     return unescape(str);
 };
 
+export const formatter = function (text, ast) {
+    return prettier.format(text, {
+        parser: () => ast,
+        'arrowParens': 'avoid',
+        'bracketSpacing': true,
+        'htmlWhitespaceSensitivity': 'css',
+        'insertPragma': false,
+        'jsxBracketSameLine': true,
+        'jsxSingleQuote': false,
+        'printWidth': 150,
+        'proseWrap': 'preserve',
+        'requirePragma': false,
+        'semi': true,
+        'singleQuote': true,
+        'tabWidth': 4,
+        'trailingComma': 'none',
+        'useTabs': false
+    });
+};

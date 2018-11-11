@@ -1,5 +1,5 @@
 /* eslint-disable no-use-before-define, consistent-return*/
-import traverse from 'babel-traverse';
+import traverse from '@babel/traverse';
 import { parse, updateCode } from './util';
 
 /**

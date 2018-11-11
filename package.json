@@ -77,11 +77,12 @@
     "yargs": "^10.0.3"
   },
   "dependencies": {
-    "babel-generator": "^6.26.1",
-    "babel-template": "^6.26.0",
-    "babel-traverse": "^6.26.0",
-    "babel-types": "^6.26.0",
-    "babylon": "^6.18.0"
+    "@babel/generator": "^7.1.5",
+    "@babel/parser": "^7.1.5",
+    "@babel/template": "^7.1.2",
+    "@babel/traverse": "^7.1.5",
+    "@babel/types": "^7.1.5",
+    "prettier": "^1.15.2"
   },
   "directories": {
     "example": "examples",
