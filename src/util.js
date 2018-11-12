@@ -59,7 +59,7 @@ export const formatter = function (text, ast) {
         'requirePragma': false,
         'semi': true,
         'singleQuote': true,
-        'tabWidth': 4,
+        'tabWidth': 2,
         'trailingComma': 'none',
         'useTabs': false,
         'parser': () => ast
