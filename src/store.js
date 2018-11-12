@@ -1,6 +1,6 @@
 /* eslint-disable no-use-before-define, consistent-return*/
 import traverse from '@babel/traverse';
-import { parse, updateCode } from './util';
+import { parse, updateCode, formatter, generate} from './util';
 
 /**
  * 解析Royjs的Store数据
@@ -18,14 +18,14 @@ class Store {
      * @return 返回state，actions，urls
      */
     parse() {
-        const ast = parse(this.code);
+        this.ast = parse(this.code);
         const code = this.code;
         const ret = {
             state: [],
             actions: [],
             urls: []
         };
-        traverse(ast, {
+        traverse(this.ast, {
             ObjectProperty(path) {
                 const { node } = path;
                 if (node.key.name === 'state') {
@@ -56,7 +56,7 @@ class Store {
                         callee.property.name === 'request') ||
                     (callee.type === 'MemberExpression' &&
                         callee.object.type === 'MemberExpression' &&
-                        ['get', 'post'].indexOf(callee.property.name) > -1)
+                        ['get', 'post', 'put', 'delete'].indexOf(callee.property.name) > -1)
                 ) {
                     args.forEach(arg => {
                         if (arg.type === 'StringLiteral') {
@@ -75,21 +75,16 @@ class Store {
      */
     remove(name) {
         const ast = parse(this.code);
-        const changes = [];
         traverse(ast, {
             ObjectMethod(path) {
                 const { node } = path;
                 if (assertName(path, name)) {
-                    const isLast = path.parent.properties.indexOf(node) === path.parent.properties.length - 1;
-                    changes.push({
-                        start: node.start,
-                        end: node.end + (isLast ? 0 : 1),
-                        replacement: ''
-                    });
+                    const index = path.parent.properties.indexOf(node);
+                    path.parent.properties.splice(index, 1);
                 }
             }
         });
-        this.code = updateCode(this.code, changes);
+        this.code = formatter(this.code, ast);
         return this.code;
     }
     /**
@@ -100,20 +95,15 @@ class Store {
      */
     renameState(oldName, newName) {
         const ast = parse(this.code);
-        const changes = [];
         traverse(ast, {
             ObjectProperty(path) {
                 const { node } = path;
                 if (assertStateName(path, oldName)) {
-                    changes.push({
-                        start: node.key.start,
-                        end: node.key.end,
-                        replacement: newName
-                    });
+                    node.key.name = newName;
                 }
             }
         });
-        this.code = updateCode(this.code, changes);
+        this.code = formatter(this.code, ast);
         return this.code;
     }
     /**
@@ -196,29 +186,28 @@ class Store {
     add(name) {
         const ret = this.parse();
         const list = ret.actions.map(item => item.name);
-        const changes = [];
         if (list.indexOf(name) > -1) {
             console.warn(`存在同名的action ${name}`);
         } else {
-            const tpl = `\n\t${name}(state, payload) {
-
-      \t}`;
+            const tpl = `var a = {${name}(state, payload) {}}`;
             const ast = parse(this.code);
+            const ret = parse(tpl);
+            let newNode;
+            traverse(ret, {
+                ObjectMethod: path => {
+                    newNode = path.node;
+                }
+            });
             const lastAction = list[list.length - 1];
             traverse(ast, {
                 ObjectMethod: path => {
-                    const { node } = path;
                     if (assertName(path, lastAction)) {
-                        const hasComma = this.code.charAt(node.end + 1) === ',';
-                        changes.push({
-                            start: node.end,
-                            end: node.end,
-                            replacement: (hasComma ? '' : ',') + tpl
-                        });
+                        path.parent.properties.push(newNode);
                     }
                 }
             });
-            this.code = updateCode(this.code, changes);
+            this.code = generate(ast).code;
+            this.code = formatter(this.code, parse(this.code));
             return this.code;
         }
     }

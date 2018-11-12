@@ -1,19 +1,7 @@
 /* eslint-disable no-use-before-define*/
 import traverse from '@babel/traverse';
-import babelGenerate from '@babel/generator';
 import * as t from '@babel/types';
-import { parse, parseExpression, decodeUnicode, formatter } from './util';
-
-const generate = function (ast) {
-    const ret = babelGenerate(ast, {
-        jsonCompatibleStrings: true,
-        jsescOption: {
-            minimal: true
-        }
-    });
-    ret.code = decodeUnicode(ret.code);
-    return ret;
-};
+import { parse, parseExpression, formatter, generate } from './util';
 
 const getNodeName = function getNodeName(openingElement) {
     let name = openingElement.name;

@@ -1,5 +1,6 @@
 import * as babylon from '@babel/parser';
 import prettier from 'prettier/standalone';
+import babelGenerate from '@babel/generator';
 
 const config = {
     sourceType: 'module',
@@ -46,21 +47,33 @@ export const decodeUnicode = function decodeUnicode(str) {
 };
 
 export const formatter = function (text, ast) {
-    return prettier.format(text, {
-        parser: () => ast,
+    const config = {
         'arrowParens': 'avoid',
         'bracketSpacing': true,
         'htmlWhitespaceSensitivity': 'css',
         'insertPragma': false,
         'jsxBracketSameLine': true,
         'jsxSingleQuote': false,
-        'printWidth': 150,
+        'printWidth': 160,
         'proseWrap': 'preserve',
         'requirePragma': false,
         'semi': true,
         'singleQuote': true,
         'tabWidth': 4,
         'trailingComma': 'none',
-        'useTabs': false
+        'useTabs': false,
+        'parser': () => ast
+    };
+    return prettier.format(text, config);
+};
+
+export const generate = function (ast) {
+    const ret = babelGenerate(ast, {
+        jsonCompatibleStrings: true,
+        jsescOption: {
+            minimal: true
+        }
     });
+    ret.code = decodeUnicode(ret.code);
+    return ret;
 };
