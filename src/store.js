@@ -86,7 +86,9 @@ class Store {
                             end: callee.property.end,
                             name: callee.property.name
                         },
-                        actionName
+                        actionName,
+                        start: path.node.start,
+                        end: path.node.end
                     });
                 }
             }
@@ -153,6 +155,35 @@ class Store {
             }
         });
         this.code = updateCode(this.code, changes);
+        return this.code;
+    }
+    /**
+     * 增加状态的值
+     * @param {String} name 状态的名称
+     * @param {String} value 状态的值
+     */
+    addState(name, value) {
+        const ast = parse(this.code);
+        traverse(ast, {
+            ObjectProperty(path) {
+                const { node } = path;
+                if (node.key.name === 'state') {
+                    const tpl = `var a = {
+                        ${name}: ${value}
+                    }`;
+                    const ret = parse(tpl);
+                    let newNode;
+                    traverse(ret, {
+                        ObjectProperty: path => {
+                            newNode = path.node;
+                        }
+                    });
+                    node.value.properties.push(newNode);
+                }
+            }
+        });
+        this.code = generate(ast).code;
+        this.code = formatter(this.code, parse(this.code));
         return this.code;
     }
     /**

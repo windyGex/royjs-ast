@@ -62,6 +62,7 @@ class App extends React.Component {
     }
     render() {
         return (<div>
+            <button onClick={() => this.edit('addState', 'test', 1)}>Add test state</button>
             <button onClick={() => this.edit('add', 'test')}>Add test action</button>
             <button onClick={() => this.edit('rename', 'reduce', 'plus')}>Rename reduce action</button>
             <button onClick={() => this.edit('remove', 'add')}>Remove add action</button>
