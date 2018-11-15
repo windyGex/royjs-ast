@@ -33,7 +33,12 @@ const store = new Store({
             }, 500);
         },
         fetch(state, payload) {
-            this.request.post('url');
+            this.request.post('url', {
+                a: 1,
+                b: 2
+            }, {
+
+            });
         }
     }
 }, {
@@ -63,7 +68,7 @@ class App extends React.Component {
             <button onClick={() => this.edit('modify', 'add', 'add(state, payload) {}')}>modify add action</button>
             <button onClick={() => this.edit('modifyState', 'count', '1')}>modify count state</button>
             <button onClick={() => this.edit('renameState', 'ds', 'dataSource')}>rename ds state</button>
-            <button onClick={() => this.edit('modifyUrl', {
+            <button onClick={() => this.edit('modifyByStartEnd', {
                 start: 737,
                 end: 742
             }, '"testurl"')}>modify url</button>

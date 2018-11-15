@@ -23,7 +23,7 @@ class Store {
         const ret = {
             state: [],
             actions: [],
-            urls: []
+            dataSource: []
         };
         traverse(this.ast, {
             ObjectProperty(path) {
@@ -58,10 +58,35 @@ class Store {
                         callee.object.type === 'MemberExpression' &&
                         ['get', 'post', 'put', 'delete'].indexOf(callee.property.name) > -1)
                 ) {
-                    args.forEach(arg => {
-                        if (arg.type === 'StringLiteral') {
-                            ret.urls.push(arg);
+                    let parentPath = path.parentPath, actionName;
+                    while (parentPath) {
+                        if (parentPath.node.type !== 'ObjectMethod') {
+                            parentPath = parentPath.parentPath;
+                        } else {
+                            actionName = parentPath.node.key.name;
+                            break;
                         }
+                    }
+                    const normalizedArgs = args.map(arg => {
+                        const ret = {
+                            start: arg.start,
+                            end: arg.end
+                        };
+                        if (arg.type === 'StringLiteral') {
+                            ret.value = arg.extra.raw;
+                        } else {
+                            ret.value = code.substring(arg.start, arg.end);
+                        }
+                        return ret;
+                    });
+                    ret.dataSource.push({
+                        args: normalizedArgs,
+                        method: {
+                            start: callee.property.start,
+                            end: callee.property.end,
+                            name: callee.property.name
+                        },
+                        actionName
                     });
                 }
             }
@@ -212,20 +237,21 @@ class Store {
         }
     }
     /**
-     * 修改store中请求url
+     * 根据位置修改内容
      * @param {Node} node 指定的节点，该节点需包含start和end两个属性
-     * @param {String} url  替换的URL
+     * @param {String} content  替换的content
      * @return 返回修改的代码
      */
-    modifyUrl(node, url) {
+    modifyByStartEnd(node, content) {
         const changes = [
             {
                 start: node.start,
                 end: node.end,
-                replacement: url
+                replacement: content
             }
         ];
         this.code = updateCode(this.code, changes);
+        this.code = formatter(this.code, parse(this.code));
         return this.code;
     }
 }
