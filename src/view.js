@@ -228,9 +228,11 @@ class View {
             const names = specifiers.map(spec => {
                 return spec.imported.name;
             });
-            if (names.indexOf(component) === -1) {
-                specifiers.push(ast.specifiers[0]);
-            }
+            component.split(',').forEach((c, i) => {
+                if (names.indexOf(c.trim()) === -1) {
+                    specifiers.push(ast.specifiers[i]);
+                }
+            });
         }
         if (returnCode) {
             this.code = formatter(this.code, this.ast);
