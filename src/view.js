@@ -187,7 +187,57 @@ class View {
         this.code = formatter(this.code, this.ast);
         return this.code;
     }
-    beforeByStart(start, code) {
+    addPkgName(component, pkgName, returnCode = true) {
+        if (!component || !pkgName) {
+            return '';
+        }
+        let matched,
+            defaults = 'react',
+            afterPkg,
+            root;
+
+        traverse(this.ast, {
+            Program(path) {
+                root = path.node;
+            },
+            ImportDeclaration(path) {
+                const { node } = path;
+                if (node.source.value === pkgName) {
+                    matched = path;
+                }
+                if (node.source.value === defaults) {
+                    afterPkg = path;
+                }
+            }
+        });
+        const code = `import {${component}} from '${pkgName}'`;
+        let ast = parse(code);
+        traverse(ast, {
+            ImportDeclaration(path) {
+                ast = path.node;
+            }
+        });
+        if (!matched) {
+            if (afterPkg) {
+                afterPkg.insertAfter(ast);
+            } else {
+                root.body.unshift(ast);
+            }
+        } else {
+            const {specifiers} = matched.node;
+            const names = specifiers.map(spec => {
+                return spec.imported.name;
+            });
+            if (names.indexOf(component) === -1) {
+                specifiers.push(ast.specifiers[0]);
+            }
+        }
+        if (returnCode) {
+            this.code = formatter(this.code, this.ast);
+            return this.code;
+        }
+    }
+    beforeByStart(start, code, component, pkgName) {
         const path = this.findByStart(start, true);
         if (path) {
             const ast = parseExpression(code);
@@ -200,15 +250,17 @@ class View {
             } else {
                 node.children.splice(index - 1, 0, ast);
             }
+            this.addPkgName(component, pkgName, false);
         }
         this.code = formatter(this.code, this.ast);
         return this.code;
     }
-    afterByStart(start, code) {
+    afterByStart(start, code, component, pkgName) {
         const path = this.findByStart(start, true);
         if (path) {
             const ast = parseExpression(code);
             path.insertAfter(ast);
+            this.addPkgName(component, pkgName, false);
         }
         this.code = formatter(this.code, this.ast);
         return this.code;

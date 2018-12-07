@@ -79,6 +79,7 @@ class App extends React.Component {
 }
 
 const nodeCode = `
+import { Button } from '@alife/hippo';
 const e = <div></div>;
 class App extends React.Component {
 
@@ -98,8 +99,8 @@ class CodeApp extends React.Component {
     state = {
         code: nodeCode
     }
-    edit = (type, oldName, newName, other) => {
-        const code = this.action[type](oldName, newName, other);
+    edit = (type, oldName, newName, other, other2) => {
+        const code = this.action[type](oldName, newName, other, other2);
         if (typeof code === 'string') {
             this.setState({
                 code
@@ -112,11 +113,11 @@ class CodeApp extends React.Component {
         return (<div>
             <button onClick={() => this.edit('parse')}>findAllNode</button>
             <button onClick={() => this.edit('find', 'Table')}>findNode Table</button>
-            <button onClick={() => this.edit('afterByStart', 120, '<div>after</div>')}>afterByStart</button>
-            <button onClick={() => this.edit('addByStart', 120, '<div>add</div>')}>addByStart</button>
-            <button onClick={() => this.edit('beforeByStart', 146, '<div>before</div>')}>beforeByStart</button>
-            <button onClick={() => this.edit('findByStart', 120)}>findNode by start</button>
-            <button onClick={() => this.edit('cloneByStart', 146)}>cloneNode by start</button>
+            <button onClick={() => this.edit('afterByStart', 159, '<div>after</div>')}>afterByStart</button>
+            <button onClick={() => this.edit('addByStart', 159, '<div>add</div>')}>addByStart</button>
+            <button onClick={() => this.edit('beforeByStart', 159, '<div>before</div>', 'Div', '@alife/hippo')}>beforeByStart</button>
+            <button onClick={() => this.edit('findByStart', 159)}>findNode by start</button>
+            <button onClick={() => this.edit('cloneByStart', 159)}>cloneNode by start</button>
             <button onClick={() => this.edit('findById', 'uuid')}>findNode By data-roy-id</button>
             <button onClick={() => this.edit('attrs', 'Table', 'loading', 2)}>Attrs number Table</button>
             <button onClick={() => this.edit('attrs', 'Table', 'type', true)}>Attrs bool Table</button>
