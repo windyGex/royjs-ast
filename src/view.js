@@ -187,6 +187,42 @@ class View {
         this.code = formatter(this.code, this.ast);
         return this.code;
     }
+    beforeByStart(start, code) {
+        const path = this.findByStart(start, true);
+        if (path) {
+            const ast = parseExpression(code);
+            const node = path.parentPath.node;
+            const index = node.children.indexOf(path.node);
+            if (index === 0) {
+                node.children.unshift(ast);
+            } else if (index === node.children.length - 1) {
+                node.children.push(ast);
+            } else {
+                node.children.splice(index - 1, 0, ast);
+            }
+        }
+        this.code = formatter(this.code, this.ast);
+        return this.code;
+    }
+    afterByStart(start, code) {
+        const path = this.findByStart(start, true);
+        if (path) {
+            const ast = parseExpression(code);
+            path.insertAfter(ast);
+        }
+        this.code = formatter(this.code, this.ast);
+        return this.code;
+    }
+    addByStart(start, code) {
+        const path = this.findByStart(start, true);
+        if (path) {
+            const ast = parseExpression(code);
+            const node = path.node;
+            node.children.push(ast);
+        }
+        this.code = formatter(this.code, this.ast);
+        return this.code;
+    }
     /**
      * 为一个节点加入子节点
      * @param {String | node} node 父节点

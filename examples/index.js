@@ -112,6 +112,9 @@ class CodeApp extends React.Component {
         return (<div>
             <button onClick={() => this.edit('parse')}>findAllNode</button>
             <button onClick={() => this.edit('find', 'Table')}>findNode Table</button>
+            <button onClick={() => this.edit('afterByStart', 120, '<div>after</div>')}>afterByStart</button>
+            <button onClick={() => this.edit('addByStart', 120, '<div>add</div>')}>addByStart</button>
+            <button onClick={() => this.edit('beforeByStart', 146, '<div>before</div>')}>beforeByStart</button>
             <button onClick={() => this.edit('findByStart', 120)}>findNode by start</button>
             <button onClick={() => this.edit('cloneByStart', 146)}>cloneNode by start</button>
             <button onClick={() => this.edit('findById', 'uuid')}>findNode By data-roy-id</button>
