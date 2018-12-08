@@ -267,12 +267,17 @@ class View {
         this.code = formatter(this.code, this.ast);
         return this.code;
     }
-    addByStart(start, code) {
+    addByStart(start, code, component, pkgName) {
         const path = this.findByStart(start, true);
         if (path) {
             const ast = parseExpression(code);
+            console.log(code, ast);
             const node = path.node;
+            if (!node.children) {
+                node.children = [];
+            }
             node.children.push(ast);
+            this.addPkgName(component, pkgName, false);
         }
         this.code = formatter(this.code, this.ast);
         return this.code;
