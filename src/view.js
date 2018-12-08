@@ -188,7 +188,7 @@ class View {
         return this.code;
     }
     addPkgName(component, pkgName, returnCode = true) {
-        if (!component || !pkgName) {
+        if (!component || !pkgName || (component && component.toLowerCase() === component)) {
             return '';
         }
         let matched,
