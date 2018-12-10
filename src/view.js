@@ -238,6 +238,7 @@ class View {
             this.code = formatter(this.code, this.ast);
             return this.code;
         }
+        return '';
     }
     beforeByStart(start, code, component, pkgName) {
         const path = this.findByStart(start, true);
