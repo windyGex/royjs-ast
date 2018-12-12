@@ -137,7 +137,12 @@ class View {
     indexAttr(node, name) {
         const { openingElement } = node;
         const { attributes } = openingElement;
-        const attrList = attributes.map(attr => attr.name.name);
+        const attrList = attributes.map(attr => {
+            if (attr.type === 'JSXAttribute') {
+                return attr.name.name;
+            }
+            return attr.argument.name;
+        });
         return attrList.indexOf(name);
     }
     hasAttr(node, name) {
