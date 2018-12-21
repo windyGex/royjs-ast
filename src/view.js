@@ -387,6 +387,28 @@ class View {
         });
         return ret;
     }
+
+    findTextByStart(start, isPath) {
+        this.ast = parse(this.code);
+        let ret;
+        traverse(this.ast, {
+            JSXText: path => {
+                if (path.node.start === parseInt(start, 10)) {
+                    ret = isPath ? path : path.node;
+                }
+            }
+        });
+        return ret;
+    }
+
+    attrText(start, value) {
+        const node = this.findTextByStart(start);
+        node.value = value;
+        node.extra.raw = value;
+        node.extra.rawValue = value;
+        this.code = formatter(this.code, this.ast);
+        return this.code;
+    }
 }
 
 export default View;

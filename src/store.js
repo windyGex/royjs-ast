@@ -32,7 +32,8 @@ class Store {
                     node.value.properties.forEach(prop => {
                         ret.state.push({
                             name: prop.key.name,
-                            value: code.substring(prop.value.start, prop.value.end)
+                            value: code.substring(prop.value.start, prop.value.end),
+                            loc: prop.loc
                         });
                     });
                 }
@@ -40,7 +41,8 @@ class Store {
                     node.value.properties.forEach(prop => {
                         ret.actions.push({
                             name: prop.key.name,
-                            value: code.substring(prop.start, prop.end)
+                            value: code.substring(prop.start, prop.end),
+                            loc: prop.loc
                         });
                     });
                 }
