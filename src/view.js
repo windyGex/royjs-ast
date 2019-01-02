@@ -229,7 +229,7 @@ class View {
                 root.body.unshift(ast);
             }
         } else {
-            const {specifiers} = matched.node;
+            const { specifiers } = matched.node;
             const names = specifiers.map(spec => {
                 return spec.imported.name;
             });
@@ -409,6 +409,94 @@ class View {
         this.code = formatter(this.code, this.ast);
         return this.code;
     }
+
+    addState(start, name, value) {
+        const path = this.findByStart(start, true);
+        // find method
+        let method = path.parentPath;
+        while (method.node.type !== 'ClassMethod') {
+            method = method.parentPath;
+        }
+        const methodNode = method.node;
+        // find class
+        const cls = method.parentPath.parentPath.node;
+        const matchName = getDecorators(cls);
+        if (!matchName) {
+            return this.code;
+        }
+        // find varibles
+        const body = method.node.body.body;
+        const vars = body.filter(bodyItem => bodyItem.type === 'VariableDeclaration');
+        const allVars = getAllVars(vars);
+        // 没有变量定义
+        if (allVars.indexOf(value) === -1) {
+            // inject 的情况下访问 this.store.state;
+            if (matchName === 'inject') {
+                // 开始寻找有没有this.store.state的定义的代码
+                const codes = body.map(bodyItem => ({
+                    code: generate(bodyItem).code,
+                    node: bodyItem
+                }));
+                const matchedStateNode = codes.filter(code => code.code.indexOf('this.store.state') > -1)[0];
+                if (matchedStateNode && matchedStateNode.node) {
+                    if (!addVarsToNode(matchedStateNode.node, value)) {
+                        const template = `const {${value}} = this.store.state`;
+                        const ast = parse(template);
+                        methodNode.body.body.unshift(ast.program.body[0]);
+                    }
+                } else {
+                    const template = `const {${value}} = this.store.state`;
+                    const ast = parse(template);
+                    methodNode.body.body.unshift(ast.program.body[0]);
+                }
+            } else if (matchName === 'connect') {
+                // nothing to do;
+            }
+        }
+        return this.attrs(path.node, name, value);
+    }
+}
+
+function getDecorators(cls) {
+    const decorators = cls.decorators;
+    let matchName;
+    for (let i = 0; i < decorators.length; i++) {
+        const decorator = decorators[i];
+        const name = decorator.expression.callee.name;
+        if (name === 'inject' || name === 'connect') {
+            matchName = name;
+            break;
+        }
+    }
+    return matchName;
+}
+
+function getAllVars(vars) {
+    let ret = [];
+    vars.forEach(varItem => {
+        const declarations = varItem.declarations;
+        declarations.forEach(node => {
+            if (node.id.type === 'Identifier') {
+                ret.push(node.id.name);
+            } else if (node.id.type === 'ObjectPattern') {
+                const vs = node.id.properties.map(item => item.value.name);
+                ret = ret.concat(vs);
+            }
+        });
+    });
+    return ret;
+}
+
+function addVarsToNode(varItem, name) {
+    const declarations = varItem.declarations;
+    let success = false;
+    declarations.forEach(node => {
+        if (node.id.type === 'ObjectPattern') {
+            node.id.properties.unshift(t.objectProperty(t.identifier(name), t.identifier(name), false, true));
+            success = true;
+        }
+    });
+    return success;
 }
 
 export default View;
