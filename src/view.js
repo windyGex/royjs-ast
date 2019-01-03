@@ -428,8 +428,9 @@ class View {
         const body = method.node.body.body;
         const vars = body.filter(bodyItem => bodyItem.type === 'VariableDeclaration');
         const allVars = getAllVars(vars);
+        const exprVar = value.split('.')[0]; // record.a -> record
         // 没有变量定义
-        if (allVars.indexOf(value) === -1) {
+        if (allVars.indexOf(exprVar) === -1) {
             // inject 的情况下访问 this.store.state;
             if (matchName === 'inject') {
                 // 开始寻找有没有this.store.state的定义的代码
@@ -439,13 +440,13 @@ class View {
                 }));
                 const matchedStateNode = codes.filter(code => code.code.indexOf('this.store.state') > -1)[0];
                 if (matchedStateNode && matchedStateNode.node) {
-                    if (!addVarsToNode(matchedStateNode.node, value)) {
-                        const template = `const {${value}} = this.store.state`;
+                    if (!addVarsToNode(matchedStateNode.node, exprVar)) {
+                        const template = `const {${exprVar}} = this.store.state`;
                         const ast = parse(template);
                         methodNode.body.body.unshift(ast.program.body[0]);
                     }
                 } else {
-                    const template = `const {${value}} = this.store.state`;
+                    const template = `const {${exprVar}} = this.store.state`;
                     const ast = parse(template);
                     methodNode.body.body.unshift(ast.program.body[0]);
                 }
