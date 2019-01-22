@@ -273,16 +273,21 @@ class View {
         this.code = formatter(this.code, this.ast);
         return this.code;
     }
-    addByStart(start, code, component, pkgName) {
+    addByStart(start, code, component, pkgName, override) {
         const path = this.findByStart(start, true);
         if (path) {
-            const ast = parseExpression(code);
+            const ast = parseExpression(`<div>${code}</div>`);
             console.log(code, ast);
+            const children = ast.children;
             const node = path.node;
-            if (!node.children) {
-                node.children = [];
+            if (override) {
+                node.children = children;
+            } else {
+                if (!node.children) {
+                    node.children = [];
+                }
+                node.children.push.apply(node.children, children);
             }
-            node.children.push(ast);
             this.addPkgName(component, pkgName, false);
         }
         this.code = formatter(this.code, this.ast);

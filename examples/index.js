@@ -102,8 +102,8 @@ class CodeApp extends React.Component {
     state = {
         code: nodeCode
     }
-    edit = (type, oldName, newName, other, other2) => {
-        const code = this.action[type](oldName, newName, other, other2);
+    edit = (type, oldName, newName, other, other2, other3) => {
+        const code = this.action[type](oldName, newName, other, other2, other3);
         if (typeof code === 'string') {
             this.setState({
                 code
@@ -117,7 +117,8 @@ class CodeApp extends React.Component {
             <button onClick={() => this.edit('parse')}>findAllNode</button>
             <button onClick={() => this.edit('find', 'Table')}>findNode Table</button>
             <button onClick={() => this.edit('afterByStart', 216, '<div>after</div>')}>afterByStart</button>
-            <button onClick={() => this.edit('addByStart', 216, '<div>add</div>')}>addByStart</button>
+            <button onClick={() => this.edit('addByStart', 216, '<div>add</div><div>remove</div>')}>addByStart</button>
+            <button onClick={() => this.edit('addByStart', 216, '<div>add</div><div>remove</div>', '', '', true)}>addByStartOverride</button>
             <button onClick={() => this.edit('beforeByStart', 216, '<div>before</div>', 'Div, A', '@alife/hippo')}>beforeByStart</button>
             <button onClick={() => this.edit('findByStart', 216)}>findNode by start</button>
             <button onClick={() => this.edit('addState', 216, 'loading', 'visible.a')}>add State by start</button>
