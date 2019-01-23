@@ -1,4 +1,4 @@
-import {Action, Element} from '../src/';
+import {Action, Element, Service} from '../src/';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -137,6 +137,49 @@ class CodeApp extends React.Component {
     }
 }
 
-ReactDOM.render(<div><CodeApp/><App/></div>, document.querySelector('#container'));
+const scode = `
+import { batchCreateServices } from '@alife/legion';
+
+export default batchCreateServices({
+  getDelivererInfo: {
+    url: '//rap2api.alibaba-inc.com/app/mock/2209/ehr/dock/deliverer/getDelivererInfo',
+    method: 'post',
+    formatter: () => {},
+    normalizer: () => {},
+  }
+});
+`;
+class ServiceApp extends React.Component {
+    action = new Service(scode)
+    state = {
+        code: scode
+    }
+    edit = (type, oldName, newName, other, other2, other3) => {
+        const code = this.action[type](oldName, newName, other, other2, other3);
+        if (typeof code === 'string') {
+            this.setState({
+                code
+            });
+        } else {
+            console.log(code);
+        }
+    }
+    render() {
+        return (<div>
+            <button onClick={() => this.edit('parse')}>parse</button>
+            <button onClick={() => this.edit('remove', 'getDelivererInfo')}>remove</button>
+            <button onClick={() => this.edit('modify', 'getDelivererInfo', `{
+                url: 'a',
+                method: 'post',
+                formatter: () => {},
+                normalizer: () => {}
+            }`)}>modify</button>
+            <pre>{this.state.code}</pre>
+        </div>);
+    }
+}
+
+
+ReactDOM.render(<div><CodeApp/><App/><ServiceApp/></div>, document.querySelector('#container'));
 
 
