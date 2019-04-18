@@ -483,6 +483,48 @@ class View {
         this.removeState(start, name, oldValue);
         this.addState(path, name, newValue);
     }
+
+    addHandler(start, name, value, body) {
+        const path = this.findByStart(start, true);
+        this.attrs(path.node, name, `this.${value}`);
+        const template = `
+            class App {
+                ${value} = ${body}
+            }
+        `;
+        const ast = parse(template);
+        let node;
+        traverse(ast, {
+            ClassProperty(path) {
+                node = path.node;
+            }
+        });
+        const cls = findClassByPath(path);
+        cls.body.body.unshift(node);
+        this.code = formatter(this.code, this.ast);
+        return this.code;
+    }
+
+    removeHandler(start, name, value) {
+        const path = this.findByStart(start, true);
+        this.removeAttr(path.node, name);
+        const body = getBodyForMethodbyPath(path);
+        const code = this.code.substr(body.start, body.end);
+        if (code.indexOf(`this.${value}`) === -1) {
+            const cls = findClassByPath(path);
+            let index;
+            cls.body.body.forEach((item, i) => {
+                if (item.key.name === value) {
+                    index = i;
+                }
+            });
+            if (index !== -1) {
+                cls.body.body.splice(index, 1);
+            }
+        }
+        this.code = formatter(this.code, this.ast);
+        return this.code;
+    }
 }
 // 获取类的装饰器
 function getDecorators(cls) {
@@ -514,6 +556,15 @@ function getAllVars(vars) {
         });
     });
     return ret;
+}
+
+function findClassByPath(path) {
+    let method = path.parentPath;
+    while (method.node.type !== 'ClassMethod') {
+        method = method.parentPath;
+    }
+    const cls = method.parentPath.parentPath.node;
+    return cls;
 }
 
 // 根据JSX元素找到方法体的所有代码

@@ -111,6 +111,10 @@ class Demo extends React.Component {
 
 class CodeApp extends React.Component {
     action = new Element(nodeCode)
+    constructor(props) {
+        super(props)
+        window.code = this;
+    }
     state = {
         code: nodeCode
     }
@@ -145,6 +149,7 @@ class CodeApp extends React.Component {
             <button onClick={() => this.edit('rename', 'div', 'span')}>Rename div to span</button>
             <button onClick={() => this.edit('add', 'div', '<span>123</span>')}>Add span to div</button>
             <button onClick={() => this.edit('remove', 'Table.Column')}>Remove Table.Column</button>
+            <button onClick={() => this.edit('addHandler', 216, 'onChange', 'onBodyChange', `(payload) => this.props.dispatch('onBodyChange', payload)`)}>addHandler for Table</button>
             <pre>{this.state.code}</pre>
         </div>);
     }
