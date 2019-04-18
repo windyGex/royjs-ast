@@ -22,8 +22,7 @@ class Store {
         const code = this.code;
         const ret = {
             state: [],
-            actions: [],
-            dataSource: []
+            actions: []
         };
         traverse(this.ast, {
             ObjectProperty(path) {
@@ -44,53 +43,6 @@ class Store {
                             value: code.substring(prop.start, prop.end),
                             loc: prop.loc
                         });
-                    });
-                }
-            },
-            CallExpression(path) {
-                const { callee, arguments: args } = path.node;
-                // this.request(url),
-                // this.request.post(url),
-                // this.request.get(url)
-                if (
-                    (callee.type === 'MemberExpression' &&
-                        callee.object.type === 'ThisExpression' &&
-                        callee.property.name === 'request') ||
-                    (callee.type === 'MemberExpression' &&
-                        callee.object.type === 'MemberExpression' &&
-                        ['get', 'post', 'put', 'delete'].indexOf(callee.property.name) > -1)
-                ) {
-                    let parentPath = path.parentPath, actionName;
-                    while (parentPath) {
-                        if (parentPath.node.type !== 'ObjectMethod') {
-                            parentPath = parentPath.parentPath;
-                        } else {
-                            actionName = parentPath.node.key.name;
-                            break;
-                        }
-                    }
-                    const normalizedArgs = args.map(arg => {
-                        const ret = {
-                            start: arg.start,
-                            end: arg.end
-                        };
-                        if (arg.type === 'StringLiteral') {
-                            ret.value = arg.extra.raw;
-                        } else {
-                            ret.value = code.substring(arg.start, arg.end);
-                        }
-                        return ret;
-                    });
-                    ret.dataSource.push({
-                        args: normalizedArgs,
-                        method: {
-                            start: callee.property.start,
-                            end: callee.property.end,
-                            name: callee.property.name
-                        },
-                        actionName,
-                        start: path.node.start,
-                        end: path.node.end
                     });
                 }
             }

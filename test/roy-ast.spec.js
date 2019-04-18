@@ -21,3 +21,17 @@ const expect = chai.expect;
 describe('Should support parse', () => {
 
 });
+
+describe('should support view', () => {
+    describe('should support view state crud', () => {
+        const text = `
+            @connect(state => state)
+            class A extends React.Component {
+                render() {
+
+                }
+            }
+        `;
+
+    });
+});

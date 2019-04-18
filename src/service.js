@@ -1,6 +1,6 @@
 /* eslint-disable no-use-before-define, consistent-return*/
 import traverse from '@babel/traverse';
-import { parse, updateCode, formatter, generate } from './util';
+import { parse, formatter, generate } from './util';
 import { parseExpression } from '@babel/parser';
 
 function assertName(path) {

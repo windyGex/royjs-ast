@@ -9,7 +9,7 @@ const logger = function (store) {
     });
 };
 
-const store = new Store({
+export default ({
     state: {
         count: 0,
         ds: [],
@@ -41,8 +41,6 @@ const store = new Store({
             });
         }
     }
-}, {
-    plugins: [logger, devtools]
 });
 `;
 
@@ -86,7 +84,21 @@ const e = <div></div>;
 class App extends React.Component {
 
 	render() {
-        const {name} = this.store.state;
+        const {name} = this.props.state;
+    	return (<div className="test">
+          	<Table>
+                  <Table.Column title="测试中文"></Table.Column>
+                  <Table.Column data-roy-id="uuid"></Table.Column>
+          	</Table>
+          </div>);
+    }
+}
+
+@connect(store)
+class Demo extends React.Component {
+
+	render() {
+        const {name} = this.props;
     	return (<div className="test">
           	<Table>
                   <Table.Column title="测试中文"></Table.Column>
@@ -122,6 +134,7 @@ class CodeApp extends React.Component {
             <button onClick={() => this.edit('beforeByStart', 216, '<div>before</div>', 'Div, A', '@alife/hippo')}>beforeByStart</button>
             <button onClick={() => this.edit('findByStart', 216)}>findNode by start</button>
             <button onClick={() => this.edit('addState', 216, 'loading', 'visible.a')}>add State by start</button>
+            <button onClick={() => this.edit('addState', 548, 'loading', 'visible.a')}>add State for connect by start</button>
             <button onClick={() => this.edit('cloneByStart', 216)}>cloneNode by start</button>
             <button onClick={() => this.edit('findById', 'uuid')}>findNode By data-roy-id</button>
             <button onClick={() => this.edit('attrs', 'Table', 'loading', 2)}>Attrs number Table</button>
@@ -178,7 +191,6 @@ class ServiceApp extends React.Component {
         </div>);
     }
 }
-
 
 ReactDOM.render(<div><CodeApp/><App/><ServiceApp/></div>, document.querySelector('#container'));
 

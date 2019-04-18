@@ -354,6 +354,9 @@ class View {
      * @param {Boolean} isPath
      */
     findByStart(start, isPath) {
+        if (typeof start !== 'number' && typeof start !== 'string') {
+            return start;
+        }
         const callback = function (node, parent) {
             return node.start === parseInt(start, 10);
         };
@@ -418,51 +421,70 @@ class View {
     addState(start, name, value) {
         const path = this.findByStart(start, true);
         // find method
-        let method = path.parentPath;
-        while (method.node.type !== 'ClassMethod') {
-            method = method.parentPath;
-        }
-        const methodNode = method.node;
-        // find class
-        const cls = method.parentPath.parentPath.node;
-        const matchName = getDecorators(cls);
+        const { body, matchName } = getBodyForMethodbyPath(path);
         if (!matchName) {
             return this.code;
         }
-        // find varibles
-        const body = method.node.body.body;
         const vars = body.filter(bodyItem => bodyItem.type === 'VariableDeclaration');
         const allVars = getAllVars(vars);
         const exprVar = value.split('.')[0]; // record.a -> record
         // 没有变量定义
         if (allVars.indexOf(exprVar) === -1) {
-            // inject 的情况下访问 this.store.state;
+            let expectedMatchCode;
+            // inject 的情况下访问 this.props.state;
+            // connect 的情况下访问 this.props;
             if (matchName === 'inject') {
-                // 开始寻找有没有this.store.state的定义的代码
-                const codes = body.map(bodyItem => ({
-                    code: generate(bodyItem).code,
-                    node: bodyItem
-                }));
-                const matchedStateNode = codes.filter(code => code.code.indexOf('this.store.state') > -1)[0];
-                if (matchedStateNode && matchedStateNode.node) {
-                    if (!addVarsToNode(matchedStateNode.node, exprVar)) {
-                        const template = `const {${exprVar}} = this.store.state`;
-                        const ast = parse(template);
-                        methodNode.body.body.unshift(ast.program.body[0]);
-                    }
-                } else {
-                    const template = `const {${exprVar}} = this.store.state`;
-                    const ast = parse(template);
-                    methodNode.body.body.unshift(ast.program.body[0]);
-                }
+                expectedMatchCode = 'this.props.state';
             } else if (matchName === 'connect') {
-                // nothing to do;
+                expectedMatchCode = 'this.props';
+            }
+            // 开始寻找有没有this.props.state的定义的代码
+            const codes = body.map(bodyItem => ({
+                code: generate(bodyItem).code,
+                node: bodyItem
+            }));
+            const matchedStateNode = codes.filter(code => code.code.indexOf(expectedMatchCode) > -1)[0];
+            if (matchedStateNode && matchedStateNode.node) {
+                if (!addVarsToNode(matchedStateNode.node, exprVar)) {
+                    const template = `const {${exprVar}} = ${expectedMatchCode}`;
+                    const ast = parse(template);
+                    body.unshift(ast.program.body[0]);
+                }
+            } else {
+                const template = `const {${exprVar}} = ${expectedMatchCode}`;
+                const ast = parse(template);
+                body.unshift(ast.program.body[0]);
             }
         }
         return this.attrs(path.node, name, value);
     }
-}
+    /**
+     * 移除视图中的状态绑定
+     * @param {*} start JSX的起始位置
+     * @param {*} name 属性的名称
+     * @param {*} value 属性之前的绑定变量
+     */
+    removeState(start, name, value) {
+        const path = this.findByStart(start, true);
+        // 首先我们移除这个属性
+        this.removeAttr(start, name);
+        // 其次我们移除状态
+        const exprVar = value.split('.')[0];
+        // 嗅探所有的JSXExpressionContainer, 是否用到这些变量，没有用到就可以移除
+        const {body} = getBodyForMethodbyPath(path);
+        const vars = getJSXExpressionFormBody(body);
+        if (vars.indexOf(exprVar) === -1) {
+            // 从变量节点当中移除exprVar
+        }
+    }
 
+    editState(start, name, oldValue, newValue) {
+        const path = this.findByStart(start, true);
+        this.removeState(start, name, oldValue);
+        this.addState(path, name, newValue);
+    }
+}
+// 获取类的装饰器
 function getDecorators(cls) {
     const decorators = cls.decorators;
     let matchName;
@@ -477,6 +499,7 @@ function getDecorators(cls) {
     return matchName;
 }
 
+// 根据VariableDeclaration 获取变量
 function getAllVars(vars) {
     let ret = [];
     vars.forEach(varItem => {
@@ -489,6 +512,35 @@ function getAllVars(vars) {
                 ret = ret.concat(vs);
             }
         });
+    });
+    return ret;
+}
+
+// 根据JSX元素找到方法体的所有代码
+function getBodyForMethodbyPath(path) {
+    let method = path.parentPath;
+    while (method.node.type !== 'ClassMethod') {
+        method = method.parentPath;
+    }
+    const methodNode = method.node;
+    // find class
+    const cls = method.parentPath.parentPath.node;
+    const matchName = getDecorators(cls);
+    const body = methodNode.body.body;
+    return { body, matchName };
+}
+
+function getJSXExpressionFormBody(body) {
+    const ret = [];
+    traverse(body, {
+        JSXExpressionContainer(path) {
+            const {expression} = path.node;
+            if (expression.type === 'Identifier') {
+                ret.push(expression.name);
+            } else if (expression.type === 'MemberExpression') {
+                ret.push(expression.object.object.name);
+            }
+        }
     });
     return ret;
 }
