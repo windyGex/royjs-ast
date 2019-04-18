@@ -525,6 +525,18 @@ class View {
         this.code = formatter(this.code, this.ast);
         return this.code;
     }
+    /**
+     * 编辑绑定的handler
+     * @param {*} start 起始位置
+     * @param {*} name 事件名称
+     * @param {*} value 事件绑定
+     * @param {*} body 方法体内容
+     */
+    editHandler(start, name, value, body) {
+        const path = this.findByStart(start, true);
+        this.removeHandler(path, name, value);
+        this.addHandler(path, name, value, body);
+    }
 }
 // 获取类的装饰器
 function getDecorators(cls) {
