@@ -1,8 +1,15 @@
 /* eslint-disable no-use-before-define*/
 import traverse from '@babel/traverse';
 import * as t from '@babel/types';
-import { parse, parseExpression, formatter, generate } from './util';
+import { parse, parseExpression, formatter, generate, validateAST } from './util';
 
+/**
+ * Extracts the name from a JSX opening element, handling both regular and member expressions.
+ * 
+ * @private
+ * @param {Object} openingElement - JSX opening element node
+ * @returns {string} The element name (e.g., 'div' or 'React.Component')
+ */
 const getNodeName = function getNodeName(openingElement) {
     let name = openingElement.name;
     if (name.type === 'JSXMemberExpression') {
@@ -13,15 +20,71 @@ const getNodeName = function getNodeName(openingElement) {
 };
 
 /**
- * 解析Royjs的视图数据
+ * View class for manipulating React components and JSX elements.
+ * 
+ * This class provides comprehensive methods to analyze, modify, and generate
+ * React component code. It supports operations on JSX elements, attributes,
+ * state bindings, event handlers, and component structure.
+ * 
+ * @class View
+ * @example
+ * const view = new View(`
+ *   import React from 'react';
+ *   
+ *   @connect(state => state)
+ *   class UserList extends React.Component {
+ *     render() {
+ *       return <div className="user-list">Content</div>;
+ *     }
+ *   }
+ * `);
+ * 
+ * const parsed = view.parse();
+ * view.attrs('div', 'data-testid', '"user-list"');
+ * console.log(view.code);
  */
 class View {
     /**
-     * View的构造函数
-     * @param {String} code 传入的view的代码
+     * Creates a new View instance.
+     * 
+     * @param {string} code - The source code of the view file
+     * @throws {Error} When code is not a valid string
+     * @example
+     * const view = new View(componentCode);
      */
     constructor(code) {
+        if (typeof code !== 'string') {
+            throw new Error('View code must be a string');
+        }
         this.code = code;
+        this._ast = null; // Cache AST to avoid re-parsing
+        this._parsed = null; // Cache parsed result
+    }
+
+    /**
+     * Gets or creates the AST for the current code.
+     * 
+     * @private
+     * @returns {Object} The parsed AST
+     */
+    _getAST() {
+        if (!this._ast) {
+            this._ast = parse(this.code);
+            if (!validateAST(this._ast)) {
+                throw new Error('Invalid AST generated from view code');
+            }
+        }
+        return this._ast;
+    }
+
+    /**
+     * Invalidates the cached AST and parsed result.
+     * 
+     * @private
+     */
+    _invalidateCache() {
+        this._ast = null;
+        this._parsed = null;
     }
     /**
      * 解析视图数据

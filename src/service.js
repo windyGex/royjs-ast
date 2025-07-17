@@ -1,8 +1,15 @@
 /* eslint-disable no-use-before-define, consistent-return*/
 import traverse from '@babel/traverse';
-import { parse, formatter, generate } from './util';
+import { parse, formatter, generate, validateAST } from './util';
 import { parseExpression } from '@babel/parser';
 
+/**
+ * Checks if a path represents a service property within a batchCreateServices call.
+ * 
+ * @private
+ * @param {Object} path - Babel traverse path
+ * @returns {boolean} True if the path is within a batchCreateServices call
+ */
 function assertName(path) {
     const node = path.parentPath.parent;
     if (node && node.callee && node.callee.name === 'batchCreateServices') {
@@ -10,19 +17,86 @@ function assertName(path) {
     }
     return false;
 }
+
+/**
+ * Checks if a path represents a service object within a batchCreateServices call.
+ * 
+ * @private
+ * @param {Object} path - Babel traverse path
+ * @returns {boolean} True if the path is a service object in batchCreateServices
+ */
 function assertCreateService(path) {
     return path.parent && path.parent.callee && path.parent.callee.name === 'batchCreateServices';
 }
+
 /**
- * 解析Service数据
+ * Service class for manipulating Roy.js service configurations.
+ * 
+ * This class provides methods to analyze, modify, and generate service
+ * configuration code. It supports CRUD operations on service definitions
+ * within batchCreateServices calls.
+ * 
+ * @class Service
+ * @example
+ * const service = new Service(`
+ *   batchCreateServices({
+ *     userService: {
+ *       url: '/api/users',
+ *       method: 'GET'
+ *     },
+ *     postService: {
+ *       url: '/api/posts',
+ *       method: 'POST'
+ *     }
+ *   });
+ * `);
+ * 
+ * const services = service.parse();
+ * service.modify('commentService', '{ url: "/api/comments", method: "GET" }');
+ * console.log(service.code);
  */
 class Service {
     /**
-     * Service的构造函数
-     * @param {String} code 传入的Service的代码
+     * Creates a new Service instance.
+     * 
+     * @param {string} code - The source code of the service file
+     * @throws {Error} When code is not a valid string
+     * @example
+     * const service = new Service(serviceCode);
      */
     constructor(code) {
+        if (typeof code !== 'string') {
+            throw new Error('Service code must be a string');
+        }
         this.code = code;
+        this._ast = null; // Cache AST to avoid re-parsing
+        this._parsed = null; // Cache parsed result
+    }
+
+    /**
+     * Gets or creates the AST for the current code.
+     * 
+     * @private
+     * @returns {Object} The parsed AST
+     */
+    _getAST() {
+        if (!this._ast) {
+            this._ast = parse(this.code);
+            if (!validateAST(this._ast)) {
+                throw new Error('Invalid AST generated from service code');
+            }
+        }
+        return this._ast;
+    }
+
+    /**
+     * Invalidates the cached AST and parsed result.
+     * 
+     * @private
+     */
+    _invalidateCache() {
+        this._ast = null;
+        this._parsed = null;
     }
     /**
      * 解析Service文件
